@@ -46,7 +46,7 @@ Do not commit `.env` to git.
 ## GitHub Pages + Render
 
 This repo is configured for GitHub Pages at:
-`https://pbierley.github.io/FidelityHackathon/`
+`https://Theltn.github.io/Currensee-core/`
 
 Required GitHub repo variable:
 

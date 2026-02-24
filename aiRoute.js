@@ -17,7 +17,7 @@ let monthlyCount = 0;
 
 // Optional: simple IP rate limit (60/min by default)
 const RATE_WINDOW_MS = Number(process.env.AI_RATE_WINDOW_MS || 60_000);
-const RATE_MAX       = Number(process.env.AI_RATE_MAX || 60);
+const RATE_MAX = Number(process.env.AI_RATE_MAX || 60);
 const ipBucket = new Map();
 function rateLimit(req, res, next) {
   const now = Date.now();
@@ -62,16 +62,16 @@ router.post('/ask', rateLimit, aiControls, async (req, res) => {
 
     // === caps (env + optional per-request) ===
     const serverCap = Number(process.env.AI_MAX_OUTPUT_TOKENS || 320);     // raise your default here
-    const hardMax   = Number(process.env.AI_SERVER_HARD_MAX || serverCap); // optional extra guard
-    const reqMax    = Number(req.body?.maxTokens);
-    const MAX_OUT   = Math.min(
+    const hardMax = Number(process.env.AI_SERVER_HARD_MAX || serverCap); // optional extra guard
+    const reqMax = Number(req.body?.maxTokens);
+    const MAX_OUT = Math.min(
       Number.isFinite(reqMax) && reqMax > 0 ? reqMax : serverCap,
       hardMax
     );
     console.log('[AI] max_output_tokens =', MAX_OUT);
 
     // Short, safe system prompt
-    const system = `You are "An Investor (AI)". Be clear and educational about stocks and options.
+    const system = `You are "Currensee", a financial AI assistant. Be clear and educational about stocks and options.
 Avoid financial advice; provide general information and learning guidance only.`;
 
     // Use Responses API with instructions + input

@@ -21,7 +21,7 @@ if (!uri) {
 const DB_NAME =
   (process.env.DB_NAME && process.env.DB_NAME.trim()) ||
   (process.env.VITE_DB_NAME && process.env.VITE_DB_NAME.trim()) ||
-  "FidelityHackathon";
+  "Currensee";
 
 let client;
 let db;
@@ -39,7 +39,7 @@ async function connectToDB() {
 
 // optional: clean shutdown
 process.on("SIGINT", async () => {
-  try { if (client) await client.close(); } catch {}
+  try { if (client) await client.close(); } catch { }
   process.exit(0);
 });
 
