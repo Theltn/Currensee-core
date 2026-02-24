@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradePro - Trading Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ===== Theme tokens (adds the CSS vars your header styles expect) ===== */
+        :root {
+            --bg: #0a0e1a;
+            --panel: #1a1f2e;
+            --card: #2d3748;
+            --border: #2d3748;
+            --text: #ffffff;
+            --muted: #a0aec0;
+            --brand: #00d4aa;
+            --brand-2: #00b894;
+            --brand-3: #3da8f5;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+            --radius: 12px;
+            --maxw: 1200px;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* ===== Top header (uses your extracted styles) ===== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: saturate(130%) blur(10px);
+            background: linear-gradient(180deg, rgba(5, 8, 12, 0.85), rgba(5, 8, 12, 0.65));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar-inner {
+            margin: 0 auto;
+            max-width: var(--maxw);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-chips {
+            /* renamed from .row to avoid Bootstrap's .row */
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .right-rail {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Back arrow (kept in case you re-enable it) */
+        .back-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            transition: background .2s ease;
+        }
+
+        .back-arrow:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Pills in header nav */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, #0b1117, #0f171f);
+            color: #e6f7f4;
+            text-decoration: none;
+        }
+
+        .pill:hover {
+            text-decoration: none;
+            border-color: var(--brand);
+        }
+
+        /* Header search */
+        .search {
+            position: relative;
+            max-width: 420px;
+            flex: 1 1 320px;
+        }
+
+        .search input {
+            width: 100%;
+            background: #0f1419;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 42px 12px 44px;
+            border-radius: 12px;
+            outline: none;
+            transition: border .2s ease;
+        }
+
+        .search input:focus {
+            border-color: var(--brand-2);
+            box-shadow: 0 0 0 3px rgba(0, 212, 170, .15);
+        }
+
+        .search svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: .7;
+        }
+
+        .kbd {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 12px;
+            border: 1px solid var(--border);
+            padding: 2px 6px;
+            border-radius: 6px;
+            opacity: .85;
+        }
+
+        /* Auth buttons (previously unstyled .ai-btn/.ai-btn-primary) */
+        .ai-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .ai-btn-primary {
+            background: linear-gradient(135deg, var(--brand), var(--brand-3));
+            color: #04222a;
+            border: 0;
+            box-shadow: var(--shadow);
+        }
+
+        .ai-btn-primary:hover {
+            filter: brightness(.95);
+            text-decoration: none;
+        }
+
+        /* ===== Page sections/cards ===== */
+        .navbar {
+            background-color: #1a1f2e !important;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .navbar-brand {
+            color: #00d4aa !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .search-container,
+        .chart-container,
+        .trading-panel {
+            background: #1a1f2e;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #2d3748;
+        }
+
+        .chart-container,
+        .trading-panel {
+            height: 500px;
+        }
+
+        .stock-info {
+            background: #0f1419;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--brand);
+        }
+
+        .balance-info,
+        .order-summary {
+            background: #0f1419;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .balance-info {
+            margin-bottom: 20px;
+        }
+
+        .order-summary {
+            margin-top: 15px;
+        }
+
+        .price-positive {
+            color: var(--brand);
+        }
+
+        .price-negative {
+            color: #ff4757;
+        }
+
+        /* Inputs */
+        .form-control,
+        .search-input {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            color: #fff;
+            border-radius: 6px;
+        }
+
+        .form-control:focus,
+        .search-input:focus {
+            background: #2d3748;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+            color: #fff;
+        }
+
+        .form-label {
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        /* Suggestions */
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestion-item {
+            background: #2d3748;
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+        }
+
+        .suggestion-item:hover {
+            background: #4a5568;
+        }
+
+        .position-relative {
+            position: relative;
+        }
+
+        /* Trade buttons (kept your look, ensured hover/focus/disabled and Bootstrap overrides) */
+        .btn-buy,
+        .btn-sell {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 10px 20px;
+            width: 100%;
+            border: 0;
+            transition: filter .15s ease, transform .02s ease-in;
+        }
+
+        .btn-buy {
+            background: var(--brand);
+            color: #001012;
+        }
+
+        .btn-buy:hover {
+            background: var(--brand-2);
+            color: #001012;
+        }
+
+        .btn-sell {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-sell:hover {
+            background: #ff3742;
+            color: #fff;
+        }
+
+        .btn-buy:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+            outline: 0;
+        }
+
+        .btn-sell:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255, 71, 87, 0.25);
+            outline: 0;
+        }
+
+        .btn-buy:active,
+        .btn-sell:active {
+            transform: translateY(1px);
+        }
+
+        .btn-buy:disabled,
+        .btn-sell:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        :root {
+            --bg: #0a0e1a;
+            --panel: #1a1f2e;
+            --card: #2d3748;
+            --border: #2d3748;
+            --text: #ffffff;
+            --muted: #a0aec0;
+            --brand: #00d4aa;
+            --brand-2: #00b894;
+            --brand-3: #3da8f5;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+            --maxw: 1200px;
+        }
+
+        /* Lay out the header in rows when needed */
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 0 auto;
+            max-width: var(--maxw);
+            padding: 14px 20px;
+            min-height: 64px;
+            /* keeps room so the arrow/logo aren't clipped */
+        }
+
+        /* Back arrow: fixed size, icon centered and fully visible */
+        .back-arrow {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            transition: background .2s ease;
+        }
+
+        .back-arrow:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .back-arrow svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+        }
+
+        /* Header nav chips: can wrap and scroll horizontally if crowded */
+        .nav-chips {
+            /* make sure your <nav> uses class="nav-chips" (not .row) */
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 1 1 auto;
+            min-width: 260px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        /* Right side (search + auth) stays together */
+        .right-rail {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 auto;
+        }
+
+        /* Search gets a sane width; won't crush the auth buttons */
+        .search {
+            flex: 0 1 340px;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        /* Auth buttons never shrink under the search */
+        .auth-rail {
+            display: flex;
+            gap: 10px;
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        /* Pill links don’t explode into multiple lines mid-word */
+        .pill {
+            white-space: nowrap;
+        }
+
+        /* ------ Responsive behavior ------ */
+        @media (max-width:1100px) {
+            .search {
+                flex-basis: 300px;
+            }
+        }
+
+        @media (max-width:900px) {
+
+            /* Stack right rail and nav on their own lines, in a nice order */
+            .right-rail {
+                order: 3;
+                flex-basis: 100%;
+                justify-content: space-between;
+            }
+
+            .nav-chips {
+                order: 2;
+                flex-basis: 100%;
+            }
+
+            .search {
+                flex: 1 1 auto;
+                max-width: none;
+            }
+
+            /* full width on small screens */
+        }
+
+        @media (max-width:520px) {
+            .auth-rail {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="topbar" role="banner">
+        <div class="topbar-inner">
+            <a href="index.html" class="back-arrow" title="Back to Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 12H5M12 5l-7 7 7 7" stroke="white" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </a>
+            <img src="AnInvestorLogo.png" alt="An Investor (AI) Logo"
+                style="height:40px; width:auto; margin-right:14px;" />
+            <span>An Investor <span style="opacity:.7"></span></span>
+
+            <!-- renamed to avoid Bootstrap's .row styles -->
+            <nav class="nav-chips" aria-label="Primary">
+                <a href="dashboard.html" class="pill requires-auth" id="linkDashboard">Trading Dashboard</a>
+                <a href="OptionsCenter.html" class="pill">Options Hub</a>
+                <a href="Portfolio.html" class="pill requires-auth" id="linkPortfolio">Portfolio</a>
+                <a href="AskAI.html" class="pill requires-auth">Ask An Investor</a>
+                <a href="optionsPlayground.html" class="pill requires-auth">Options Playground</a>
+            </nav>
+
+        </div>
+    </header>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Left Column - Search and Chart -->
+            <div class="col-lg-8">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <h5><i class="fas fa-search"></i> Stock Search</h5>
+                    <div class="position-relative">
+                        <input type="text" class="form-control search-input" id="stockSearch"
+                            placeholder="Search for stocks (e.g., AAPL, GOOGL, TSLA...)">
+                        <div class="suggestions-dropdown" id="suggestions">
+                            <!-- Suggestions will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="chart-container">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Column - Trading Panel -->
+            <div class="col-lg-4">
+                <div class="trading-panel">
+                    <!-- Stock Info -->
+                    <div class="stock-info">
+                        <div class="d-flex align-items-center mb-2">
+                            <img id="stockLogo" src="" alt=""
+                                style="width: 32px; height: 32px; margin-right: 10px; display: none;">
+                            <h4 id="stockSymbol">Loading...</h4>
+                        </div>
+                        <h3 id="stockPrice" class="price-positive">--</h3>
+                        <p id="stockChange" class="price-positive">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </p>
+                        <div class="row mt-2">
+                            <div class="col-6">
+                                <small class="text-muted">Open: </small>
+                                <span id="stockOpen">--</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Volume: </small>
+                                <span id="stockVolume">--</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">High: </small>
+                                <span id="stockHigh">--</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Low: </small>
+                                <span id="stockLow">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Info -->
+                    <div class="balance-info">
+                        <h6>Account Balance</h6>
+                        <h5 id="cashBalance">$10,000.00</h5>
+                        <small class="text-muted">Available for trading</small>
+                    </div>
+
+                    <!-- Trading Form -->
+                    <div class="mb-3">
+                        <label for="orderType" class="form-label">Order Type</label>
+                        <select class="form-control" id="orderType">
+                            <option value="market">Market Order</option>
+                            <option value="limit">Limit Order</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" value="1" min="1">
+                    </div>
+
+                    <div class="mb-3" id="limitPriceDiv" style="display: none;">
+                        <label for="limitPrice" class="form-label">Limit Price</label>
+                        <input type="number" class="form-control" id="limitPrice" step="0.01">
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="order-summary">
+                        <div class="d-flex justify-content-between">
+                            <span>Price per share:</span>
+                            <span id="pricePerShare">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Quantity:</span>
+                            <span id="orderQuantity">1</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Fees:</span>
+                            <span>$0.00</span>
+                        </div>
+                        <hr style="border-color: #2d3748;">
+                        <div class="d-flex justify-content-between">
+                            <strong>Total Cost:</strong>
+                            <strong id="totalCost">--</strong>
+                        </div>
+                    </div>
+
+                    <!-- Buy/Sell Buttons -->
+                    <div class="mt-3">
+                        <button class="btn btn-buy" onclick="executeTrade('buy')">
+                            <i class="fas fa-arrow-up"></i> BUY
+                        </button>
+                        <button class="btn btn-sell" onclick="executeTrade('sell')">
+                            <i class="fas fa-arrow-down"></i> SELL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <script>
+        // API Configuration
+        const url = "http://localhost:4000";
+
+        // Cache for stock data
+        let allStocksCache = [];
+        let stockDataCache = {};
+        let currentStock = null;
+        let currentStockData = null;
+        let chart;
+        let cashBalance = 0.00;
+
+        // Alert functions
+        function showWarningAlert(message) {
+            alert(message);
+        }
+
+        function showSuccessAlert(message) {
+            alert(message);
+        }
+
+        // Fetch all stocks for search suggestions
+        async function fetchAllStocks() {
+            try {
+                const response = await fetch(`${url}/stocks/all`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                allStocksCache = data;
+                console.log("All stocks loaded:", data.length, "stocks");
+                setCashBalance();
+                return data;
+            } catch (error) {
+                console.error("Error fetching all stocks:", error);
+                return [];
+            }
+        }
+
+        //  fetches the balance from db and then sets the UI
+        async function setCashBalance() {
+            console.log("setting cash balance");
+            cashBalance = await getUserBalance();
+            const balanceElement = document.getElementById("cashBalance");
+            balanceElement.textContent = `${cashBalance}`;
+            console.log(cashBalance);
+        }
+
+        async function changeCashBalance(changeAmount) {
+            console.log("changing cash balance by", changeAmount);
+            console.log("current balance", cashBalance);
+            const username = getCookie("username");
+            try {
+                const cashBalance = await getUserBalance();
+
+                if (cashBalance - changeAmount < 0) {
+                    throw new Error("Insufficient funds"); // ✅ throw a proper Error
+                }
+            } catch (err) {
+                console.error("Balance check failed:", err.message);
+            }
+            const newCashBalance = cashBalance - changeAmount;
+
+            try {
+                const response = await fetch(`${url}/users/updateBalance`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username: username, balance: newCashBalance }),
+                    credentials: "include",
+                });
+                console.log("response from changeCashBalance", response.body);
+            }
+            catch (err) {
+                console.error("Database error", err.message);
+            }
+        }
+
+
+        // Fetch individual stock data
+        async function fetchStockData(ticker) {
+            try {
+                const response = await fetch(`${url}/stocks/${ticker}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ ticker: ticker }),
+                    credentials: "include",
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showWarningAlert("You must be logged in to search for stocks.");
+                    } else {
+                        showWarningAlert("Failed to fetch stock data. Please try again.");
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const apiData = await response.json();
+                const processedData = processStockData(apiData);
+
+                if (processedData) {
+                    stockDataCache[ticker] = processedData;
+                    return processedData;
+                } else {
+                    showWarningAlert("No trading data available for this stock.");
+                    return null;
+                }
+
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                showWarningAlert("Failed to fetch stock data. Please try again.");
+                return null;
+            }
+        }
+
+        // Process API data to extract what we need for the UI
+        function processStockData(apiData) {
+            if (!apiData || !apiData.tradingData || apiData.tradingData.length === 0) {
+                return null;
+            }
+
+            const tradingData = apiData.tradingData;
+            const latestData = tradingData[tradingData.length - 1];
+            const previousData = tradingData.length > 1 ? tradingData[tradingData.length - 2] : latestData;
+
+            const currentPrice = latestData.c;
+            const previousPrice = previousData.c;
+            const change = currentPrice - previousPrice;
+            const changePercent = (change / previousPrice) * 100;
+
+            const chartData = tradingData.slice(-30).map(day => day.c);
+            const timeLabels = tradingData.slice(-30).map(day => {
+                const date = new Date(day.t);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+
+            return {
+                symbol: apiData.ticker,
+                name: apiData.name,
+                price: currentPrice,
+                change: change,
+                changePercent: changePercent,
+                historicalData: chartData,
+                timeLabels: timeLabels,
+                volume: latestData.v,
+                marketCap: apiData.market_cap,
+                high: latestData.h,
+                low: latestData.l,
+                open: latestData.o,
+                description: apiData.description,
+                logo: apiData.logo
+            };
+        }
+
+        function getCookie(name) {
+            const cDecoded = decodeURIComponent(document.cookie);
+            const cArray = cDecoded.split("; ");
+            let result = null;
+            cArray.forEach((element) => {
+                if (element.indexOf(name) == 0) {
+                    result = element.substring(name.length + 1);
+                }
+            });
+            return result;
+        }
+
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Loading...'],
+                    datasets: [{
+                        label: 'Stock Price',
+                        data: [0],
+                        borderColor: '#00d4aa',
+                        backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#a0aec0' },
+                            grid: { color: '#2d3748' }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#a0aec0',
+                                callback: function (value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            },
+                            grid: { color: '#2d3748' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to create balance
+        async function getUserBalance() {
+            //  use cookie to get username for the call to the database to get balance
+            const username = getCookie("username");
+            console.log("username", username);
+            //  make api call here 
+            try {
+                const response = await fetch(`${url}/users/getBalance`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username: username }),
+                    credentials: "include",
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showWarningAlert("You must be logged in to have a balance to trade.");
+                    } else {
+                        showWarningAlert("Failed to fetch user data. Please try again.");
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const apiData = await response.json();
+                console.log("apiData", apiData);
+                if (apiData) {
+                    return apiData.balance;
+                }
+
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                showWarningAlert("Failed to fetch user data. Please try again.");
+                return null;
+            }
+        }
+        // Update stock display with API data
+        async function updateStockDisplay(symbol) {
+            // Show loading state
+            document.getElementById('stockSymbol').textContent = symbol;
+            document.getElementById('stockPrice').textContent = 'Loading...';
+            document.getElementById('stockChange').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            document.getElementById('stockOpen').textContent = '--';
+            document.getElementById('stockHigh').textContent = '--';
+            document.getElementById('stockLow').textContent = '--';
+            document.getElementById('stockVolume').textContent = '--';
+
+            const logoImg = document.getElementById('stockLogo');
+            logoImg.style.display = 'none';
+
+            // Fetch data from API
+            const stockData = await fetchStockData(symbol);
+
+            if (!stockData) {
+                document.getElementById('stockPrice').textContent = 'Error';
+                document.getElementById('stockChange').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load';
+                return;
+            }
+
+            currentStock = symbol;
+            currentStockData = stockData;
+
+            // Update display with real data
+            document.getElementById('stockSymbol').textContent = `${stockData.symbol}`;
+            document.getElementById('stockPrice').textContent = `$${stockData.price.toFixed(2)}`;
+
+            // Update additional stock info
+            document.getElementById('stockOpen').textContent = `$${stockData.open.toFixed(2)}`;
+            document.getElementById('stockHigh').textContent = `$${stockData.high.toFixed(2)}`;
+            document.getElementById('stockLow').textContent = `$${stockData.low.toFixed(2)}`;
+            document.getElementById('stockVolume').textContent = stockData.volume.toLocaleString();
+
+            // Show logo if available
+            if (stockData.logo) {
+                logoImg.src = stockData.logo;
+                logoImg.alt = stockData.name;
+                logoImg.style.display = 'inline-block';
+                logoImg.onerror = function () {
+                    this.style.display = 'none';
+                };
+            }
+
+            const changeElement = document.getElementById('stockChange');
+            const change = stockData.change || 0;
+            const changePercent = stockData.changePercent || 0;
+            const isPositive = change >= 0;
+
+            changeElement.className = isPositive ? 'price-positive' : 'price-negative';
+            changeElement.innerHTML = `<i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i> ${isPositive ? '+' : ''}$${Math.abs(change).toFixed(2)} (${isPositive ? '+' : ''}${changePercent.toFixed(2)}%)`;
+
+            // Update chart with historical data
+            if (stockData.historicalData && chart) {
+                chart.data.datasets[0].label = `${stockData.symbol} Price`;
+                chart.data.datasets[0].data = stockData.historicalData;
+                chart.data.datasets[0].borderColor = isPositive ? '#00d4aa' : '#ff4757';
+                chart.data.datasets[0].backgroundColor = isPositive ? 'rgba(0, 212, 170, 0.1)' : 'rgba(255, 71, 87, 0.1)';
+
+                if (stockData.timeLabels) {
+                    chart.data.labels = stockData.timeLabels;
+                }
+
+                chart.update();
+            }
+
+            updateOrderSummary();
+        }
+
+        // Update order summary
+        function updateOrderSummary() {
+            if (!currentStockData) return;
+
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const orderType = document.getElementById('orderType').value;
+
+            let price = currentStockData.price;
+            if (orderType === 'limit') {
+                const limitPrice = parseFloat(document.getElementById('limitPrice').value);
+                if (limitPrice > 0) price = limitPrice;
+            }
+
+            const total = price * quantity;
+
+            document.getElementById('pricePerShare').textContent = `$${price.toFixed(2)}`;
+            document.getElementById('orderQuantity').textContent = quantity;
+            document.getElementById('totalCost').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Search functionality with API integration
+        function setupSearch() {
+            const searchInput = document.getElementById('stockSearch');
+            const suggestionsDiv = document.getElementById('suggestions');
+
+            searchInput.addEventListener('input', function () {
+                const query = this.value.toUpperCase().trim();
+                suggestionsDiv.innerHTML = '';
+
+                if (query.length > 0) {
+                    // Filter from all stocks cache
+                    const matches = allStocksCache.filter(stock =>
+                        stock.ticker.includes(query) ||
+                        stock.name.toUpperCase().includes(query)
+                    ).slice(0, 10); // Limit to 10 suggestions
+
+                    if (matches.length > 0) {
+                        matches.forEach(stock => {
+                            const div = document.createElement('div');
+                            div.className = 'suggestion-item';
+                            div.innerHTML = `<strong>${stock.ticker}</strong> - ${stock.name}`;
+                            div.onclick = () => {
+                                searchInput.value = `${stock.ticker} - ${stock.name}`;
+                                updateStockDisplay(stock.ticker);
+                                suggestionsDiv.style.display = 'none';
+                            };
+                            suggestionsDiv.appendChild(div);
+                        });
+                        suggestionsDiv.style.display = 'block';
+                    } else {
+                        // If no matches found, allow user to search anyway
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.innerHTML = `<i class="fas fa-search"></i> Search for "${query}"`;
+                        div.onclick = () => {
+                            searchInput.value = query;
+                            updateStockDisplay(query);
+                            suggestionsDiv.style.display = 'none';
+                        };
+                        suggestionsDiv.appendChild(div);
+                        suggestionsDiv.style.display = 'block';
+                    }
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                }
+            });
+
+            // Handle Enter key
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    const ticker = this.value.split(' - ')[0].toUpperCase().trim();
+                    if (ticker) {
+                        updateStockDisplay(ticker);
+                        suggestionsDiv.style.display = 'none';
+                    }
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                    suggestionsDiv.style.display = 'none';
+                }
+            });
+        }
+
+        // Order type change handler
+        document.getElementById('orderType').addEventListener('change', function () {
+            const limitPriceDiv = document.getElementById('limitPriceDiv');
+            if (this.value === 'limit') {
+                limitPriceDiv.style.display = 'block';
+                if (currentStockData) {
+                    document.getElementById('limitPrice').value = currentStockData.price.toFixed(2);
+                }
+            } else {
+                limitPriceDiv.style.display = 'none';
+            }
+            updateOrderSummary();
+        });
+
+        // Quantity change handler
+        document.getElementById('quantity').addEventListener('input', updateOrderSummary);
+        document.getElementById('limitPrice').addEventListener('input', updateOrderSummary);
+
+        // Execute trade
+        async function executeTrade(action) {
+            if (!currentStockData) {
+                showWarningAlert('Please select a stock first');
+                return;
+            }
+
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const totalCost = parseFloat(document.getElementById('totalCost').textContent.replace('$', ''));
+            const ticker = currentStockData.symbol;
+            const username = getCookie("username");
+            //  log all variables
+            console.log("Executing trade:", { ticker, quantity, totalCost, username });
+
+            if (action === 'buy') {
+                if (totalCost > cashBalance) {
+                    showWarningAlert('Insufficient funds!');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${url}/users/buyAsset`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ username: username, ticker: ticker, amount: quantity, totalCost: totalCost }),
+                        credentials: "include",
+                    });
+
+                    if (!response.ok) throw new Error("Buy request failed");
+
+                    await changeCashBalance(totalCost);
+                    await setCashBalance(); // refresh UI
+                    showSuccessAlert(`Successfully bought ${quantity} shares of ${currentStock} for $${totalCost.toFixed(2)}`);
+                } catch (err) {
+                    console.error(err);
+                    showWarningAlert("Buy failed, please try again.");
+                }
+            }
+
+            if (action === 'sell') {
+                //  check user has enough shares to sell
+                if (quantity <= 0) {
+                    showWarningAlert('Quantity must be greater than zero!');
+                    return;
+                }
+                try {
+                    const response = await fetch(`${url}/users/sellAsset`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ username: username, ticker: ticker, amount: quantity }),
+                        credentials: "include",
+                    });
+
+                    if (!response.ok) throw new Error("Sell request failed");
+
+                    await changeCashBalance(-totalCost);
+                    await setCashBalance(); // refresh UI
+                    showSuccessAlert(`Successfully sold ${quantity} shares of ${currentStock} for $${totalCost.toFixed(2)}`);
+                } catch (err) {
+                    console.error(err);
+                    showWarningAlert("Sell failed, please try again.");
+                }
+            }
+
+            document.getElementById('cashBalance').textContent = `$${cashBalance.toFixed(2)}`;
+        }
+
+        // Initialize everything
+        window.addEventListener('load', async function () {
+            initChart();
+            setupSearch();
+
+            // Load all stocks for search functionality
+            await fetchAllStocks();
+
+            // Load initial stock (META as example)
+            updateStockDisplay('META');
+        });
+    </script>
+</body>
+
+</html>

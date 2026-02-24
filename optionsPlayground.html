@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Options Trading Dashboard</title>
+    <!-- Fonts / CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* === Shared top bar (matches other pages) === */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: saturate(130%) blur(10px);
+            background: linear-gradient(180deg, rgba(5, 8, 12, 0.85), rgba(5, 8, 12, 0.65));
+            border-bottom: 1px solid #30363d;
+        }
+
+        .topbar-inner {
+            margin: 0 auto;
+            max-width: min(1400px, 95vw);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+        }
+
+        .back-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: background .2s ease;
+        }
+
+        .back-arrow:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .back-arrow svg {
+            display: block;
+        }
+
+        /* === Your existing dark theme === */
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+        }
+
+        .table-dark {
+            --bs-table-bg: #161b22;
+            --bs-table-border-color: #30363d;
+        }
+
+        .btn-success {
+            background-color: #238636;
+            border-color: #238636;
+        }
+
+        .btn-danger {
+            background-color: #da3633;
+            border-color: #da3633;
+        }
+
+        .text-success {
+            color: #3fb950 !important;
+        }
+
+        .text-danger {
+            color: #f85149 !important;
+        }
+
+        .atm-row {
+            background-color: rgba(9, 105, 218, 0.15);
+        }
+
+        .modal-content {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+        }
+
+        .form-control {
+            background-color: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+
+        .form-control:focus {
+            background-color: #21262d;
+            border-color: #0969da;
+            color: #c9d1d9;
+            box-shadow: 0 0 0 0.25rem rgba(9, 105, 218, 0.25);
+        }
+
+        .logo-container {
+            background-color: white;
+            border-radius: 4px;
+            padding: 4px;
+        }
+
+        .option-btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header (same look as others) -->
+    <header class="topbar" role="banner">
+        <div class="topbar-inner">
+            <a href="index.html" class="back-arrow" title="Back to Home" aria-label="Back to Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 12H5M12 5l-7 7 7 7" stroke="white" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </a>
+            <img src="AnInvestorLogo.png" alt="An Investor (AI) Logo"
+                style="height:40px; width:auto; margin-right:14px;" />
+            <span>An Investor <span style="opacity:.7">(Options Playground)</span></span>
+        </div>
+    </header>
+
+    <div class="container-fluid py-4">
+        <!-- Stock Search -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <input type="text" id="tickerInput" class="form-control"
+                            placeholder="Enter ticker symbol (e.g., AAPL)" value="AAPL">
+                    </div>
+                    <div class="col-md-2">
+                        <button id="searchBtn" class="btn btn-primary w-100">Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading/Error States -->
+        <div id="loading" class="text-center py-5 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading stock data...</p>
+        </div>
+
+        <div id="error" class="alert alert-danger d-none"></div>
+
+        <!-- Stock Info -->
+        <div id="stockInfo" class="card mb-4 d-none">
+            <div class="card-body">
+                <div class="row align-items-center mb-3">
+                    <div class="col-auto">
+                        <div id="stockLogo" class="logo-container">
+                            <img src="" alt="Stock Logo" width="48" height="48">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <h2 id="stockName" class="mb-0"></h2>
+                        <small id="stockTicker" class="text-muted"></small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-secondary bg-opacity-25">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-dollar-sign text-success me-2"></i>
+                                    <span class="small">Current Price</span>
+                                </div>
+                                <h3 id="currentPrice" class="mb-1"></h3>
+                                <div id="priceChange" class="small d-flex align-items-center">
+                                    <i class="fas fa-trending-up me-1"></i>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-secondary bg-opacity-25">
+                            <div class="card-body">
+                                <span class="small text-muted">Market Cap</span>
+                                <h3 id="marketCap" class="mb-0"></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-secondary bg-opacity-25">
+                            <div class="card-body">
+                                <span class="small text-muted">Strike Increment</span>
+                                <h3 id="strikeIncrement" class="mb-0"></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <p id="stockDescription" class="small text-muted mb-0"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options Chain -->
+        <div id="optionsChain" class="card d-none">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-calendar me-2"></i>
+                    Options Chain
+                </h3>
+            </div>
+            <div id="optionsTables" class="card-body p-0"></div>
+        </div>
+    </div>
+
+    <!-- Buy Option Modal -->
+    <div class="modal fade" id="buyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Buy <span id="modalOptionType"></span> Option</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card bg-secondary bg-opacity-25 mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Strike Price:</small>
+                                    <div id="modalStrike" class="fw-bold"></div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Premium:</small>
+                                    <div id="modalPremium" class="fw-bold"></div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <small class="text-muted">Expiration:</small>
+                                    <div id="modalExpiration" class="fw-bold"></div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <small class="text-muted">Type:</small>
+                                    <div id="modalType" class="fw-bold text-capitalize"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contractsInput" class="form-label">Number of Contracts</label>
+                        <input type="number" id="contractsInput" class="form-control" value="1" min="1">
+                    </div>
+
+                    <div class="card bg-secondary bg-opacity-25 mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Total Cost:</span>
+                                <span id="totalCost" class="fw-bold"></span>
+                            </div>
+                            <small id="costBreakdown" class="text-muted"></small>
+                        </div>
+                    </div>
+
+                    <div id="simulationSection">
+                        <button id="simulateBtn" class="btn btn-info w-100 mb-3">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Simulate P/L at Expiration
+                        </button>
+
+                        <div id="simulationResult" class="card bg-secondary bg-opacity-25 d-none">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Simulation Result
+                                </h6>
+                                <div class="row small">
+                                    <div class="col-6">
+                                        <span class="text-muted">Stock Price at Expiry:</span>
+                                        <div id="finalPrice" class="fw-bold"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Total Cost:</span>
+                                        <div id="simTotalCost" class="fw-bold"></div>
+                                    </div>
+                                    <div class="col-6 mt-2">
+                                        <span class="text-muted">Total Value:</span>
+                                        <div id="totalValue" class="fw-bold"></div>
+                                    </div>
+                                    <div class="col-6 mt-2">
+                                        <span class="text-muted">Profit/Loss:</span>
+                                        <div id="profitLoss" class="fw-bold"></div>
+                                    </div>
+                                    <div class="col-12 mt-2 pt-2 border-top">
+                                        <span class="text-muted">Return:</span>
+                                        <div id="returnPercent" class="fw-bold"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="simulationButtons" class="d-flex gap-2 mt-3 d-none">
+                            <button id="runAgainBtn" class="btn btn-secondary flex-fill">Run Again</button>
+                            <button id="placeOrderBtn" class="btn btn-success flex-fill">Place Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let stockData = null;
+        let selectedOption = null;
+        let currentModal = null;
+
+        // DOM elements
+        const elements = {
+            tickerInput: document.getElementById('tickerInput'),
+            searchBtn: document.getElementById('searchBtn'),
+            loading: document.getElementById('loading'),
+            error: document.getElementById('error'),
+            stockInfo: document.getElementById('stockInfo'),
+            optionsChain: document.getElementById('optionsChain'),
+            optionsTables: document.getElementById('optionsTables'),
+            contractsInput: document.getElementById('contractsInput')
+        };
+
+        // Mock API URL
+        const API_URL = 'https://your-api-url.com';
+
+        // Utility functions
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(value);
+        };
+
+        const formatMarketCap = (value) => {
+            if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+            if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+            if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+            return formatCurrency(value);
+        };
+
+        // Get next Fridays
+        const getNextFridays = (count = 4) => {
+            const fridays = [];
+            const today = new Date();
+
+            let nextFriday = new Date(today);
+            const daysUntilFriday = (5 - today.getDay() + 7) % 7;
+            if (daysUntilFriday === 0 && today.getDay() === 5) {
+                nextFriday.setDate(today.getDate() + 7);
+            } else {
+                nextFriday.setDate(today.getDate() + daysUntilFriday);
+            }
+
+            for (let i = 0; i < count; i++) {
+                fridays.push(new Date(nextFriday));
+                nextFriday.setDate(nextFriday.getDate() + 7);
+            }
+
+            return fridays;
+        };
+
+        // Determine strike price increment
+        const getStrikeIncrement = (price) => {
+            if (price < 25) return 2.5;
+            if (price <= 200) return 5;
+            return 10;
+        };
+
+        // Generate strike prices
+        const generateStrikePrices = (currentPrice, increment) => {
+            const strikes = [];
+            const numStrikes = 10;
+
+            const baseStrike = Math.round(currentPrice / increment) * increment;
+
+            for (let i = -numStrikes; i <= numStrikes; i++) {
+                const strike = baseStrike + (i * increment);
+                if (strike > 0) {
+                    strikes.push(strike);
+                }
+            }
+
+            return strikes.sort((a, b) => a - b);
+        };
+
+        // Generate mock options data
+        const generateMockOptions = (currentPrice, expirationDate, strike) => {
+            const timeToExpiry = (expirationDate - new Date()) / (1000 * 60 * 60 * 24);
+
+            // More balanced pricing for 50/50 odds
+            const moneyness = strike / currentPrice;
+            const intrinsicValue = Math.max(0, currentPrice - strike);
+
+            // Balanced time value - closer to ATM options have higher time value
+            const distanceFromATM = Math.abs(moneyness - 1);
+            const timeValueBase = (timeToExpiry / 365) * currentPrice * 0.08;
+            const timeValue = timeValueBase * Math.exp(-distanceFromATM * 3) + Math.random() * 2;
+
+            const callPrice = intrinsicValue + timeValue;
+            const putIntrinsic = Math.max(0, strike - currentPrice);
+            const putPrice = putIntrinsic + timeValue * 0.9;
+
+            return {
+                strike: strike,
+                expiration: expirationDate,
+                call: {
+                    price: Math.max(0.05, callPrice).toFixed(2),
+                    bid: Math.max(0.01, callPrice * 0.95).toFixed(2),
+                    ask: (callPrice * 1.05).toFixed(2),
+                    volume: Math.floor(Math.random() * 1000),
+                    openInterest: Math.floor(Math.random() * 5000),
+                    impliedVolatility: (Math.random() * 0.3 + 0.25).toFixed(3)
+                },
+                put: {
+                    price: Math.max(0.05, putPrice).toFixed(2),
+                    bid: Math.max(0.01, putPrice * 0.95).toFixed(2),
+                    ask: (putPrice * 1.05).toFixed(2),
+                    volume: Math.floor(Math.random() * 800),
+                    openInterest: Math.floor(Math.random() * 4000),
+                    impliedVolatility: (Math.random() * 0.3 + 0.25).toFixed(3)
+                }
+            };
+        };
+
+        // Improved stock simulation for more balanced outcomes
+        const simulateStockMovement = (currentPrice, expirationDate, volatility = 0.25) => {
+            const daysToExpiry = Math.max(1, (expirationDate - new Date()) / (1000 * 60 * 60 * 24));
+            const annualizedTime = daysToExpiry / 365;
+
+            // More balanced random walk
+            const steps = Math.max(5, Math.floor(daysToExpiry / 7)); // Weekly steps
+            let price = currentPrice;
+            const dt = annualizedTime / steps;
+
+            // Very small drift for more balanced outcomes
+            const drift = (Math.random() - 0.5) * 0.02; // Random drift between -1% to +1% annually
+
+            for (let i = 0; i < steps; i++) {
+                // Normal distribution approximation
+                const u1 = Math.random();
+                const u2 = Math.random();
+                const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+
+                const priceChange = price * (drift * dt + volatility * Math.sqrt(dt) * z);
+                price = Math.max(0.01, price + priceChange);
+            }
+
+            return price;
+        };
+
+        // Calculate option P/L
+        const calculateOptionPL = (option, type, finalStockPrice, contracts, premium) => {
+            const totalCost = premium * contracts * 100;
+            let intrinsicValue = 0;
+
+            if (type === 'call') {
+                intrinsicValue = Math.max(0, finalStockPrice - option.strike);
+            } else {
+                intrinsicValue = Math.max(0, option.strike - finalStockPrice);
+            }
+
+            const totalValue = intrinsicValue * contracts * 100;
+            const profitLoss = totalValue - totalCost;
+            const returnPercent = totalCost > 0 ? (profitLoss / totalCost) * 100 : 0;
+
+            return {
+                totalCost,
+                totalValue,
+                profitLoss,
+                returnPercent,
+                finalStockPrice
+            };
+        };
+
+        // Fetch stock data
+        const fetchStockData = async () => {
+            const ticker = elements.tickerInput.value.trim().toUpperCase();
+            if (!ticker) return;
+            const url = "http://localhost:4000";
+            showLoading(true);
+            hideError();
+
+            try {
+                // Mock data - replace with actual API call
+                // const mockResponse = {
+                //     ticker: ticker,
+                //     name: ticker === 'AAPL' ? 'Apple Inc.' : `${ticker} Corporation`,
+                //     description: `${ticker} is a leading technology company with innovative products and services.`,
+                //     logo: `https://logo.clearbit.com/${ticker.toLowerCase()}.com`,
+                //     market_cap: 3000000000000,
+                //     tradingData: [
+                //         {
+                //             t: Date.now(),
+                //             c: ticker === 'AAPL' ? 175.43 : Math.random() * 300 + 50,
+                //             h: ticker === 'AAPL' ? 177.12 : Math.random() * 300 + 50,
+                //             l: ticker === 'AAPL' ? 174.89 : Math.random() * 300 + 50,
+                //             o: ticker === 'AAPL' ? 176.20 : Math.random() * 300 + 50,
+                //             v: 50000000
+                //         }
+                //     ]
+                // };
+
+                // Uncomment for real API
+
+                try {
+                    const response = await fetch(`${url}/stocks/${ticker}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ ticker }),
+                        credentials: "include",
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    stockData = data;
+                    console.log("Stock data:", data);
+                    displayStockData();
+                    generateOptionsChain();
+
+                } catch (error) {
+                    console.error("Error fetching stock data:", error);
+                }
+
+                console.log("Fetched stock data:", stockData);
+
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // Display stock data
+        const displayStockData = () => {
+            console.log("Displaying stock data:", stockData);
+            if (!stockData || !stockData.tradingData || stockData.tradingData.length === 0) {
+                return;
+            }
+
+            const currentPrice = stockData.tradingData[0].c;
+            const previousClose = stockData.tradingData[0].o;
+            const priceChange = currentPrice - previousClose;
+            const percentChange = (priceChange / previousClose) * 100;
+            const increment = getStrikeIncrement(currentPrice);
+
+            // Update DOM elements
+            document.getElementById('stockName').textContent = stockData.name;
+            document.getElementById('stockTicker').textContent = stockData.ticker;
+            document.getElementById('currentPrice').textContent = formatCurrency(currentPrice);
+            document.getElementById('marketCap').textContent = formatMarketCap(stockData.market_cap);
+            document.getElementById('strikeIncrement').textContent = formatCurrency(increment);
+            document.getElementById('stockDescription').textContent = stockData.description;
+
+            // Update logo
+            const logoImg = document.querySelector('#stockLogo img');
+            logoImg.src = stockData.logo;
+            logoImg.alt = `${stockData.name} logo`;
+
+            // Update price change
+            const priceChangeEl = document.getElementById('priceChange');
+            const changeSpan = priceChangeEl.querySelector('span');
+            const changeIcon = priceChangeEl.querySelector('i');
+
+            changeSpan.textContent = `${priceChange >= 0 ? '+' : ''}${formatCurrency(priceChange)} (${percentChange.toFixed(2)}%)`;
+
+            if (priceChange >= 0) {
+                priceChangeEl.className = 'small d-flex align-items-center text-success';
+                changeIcon.className = 'fas fa-trending-up me-1';
+            } else {
+                priceChangeEl.className = 'small d-flex align-items-center text-danger';
+                changeIcon.className = 'fas fa-trending-down me-1';
+            }
+
+            elements.stockInfo.classList.remove('d-none');
+        };
+
+        // Generate options chain
+        const generateOptionsChain = () => {
+            if (!stockData) return;
+
+            const currentPrice = stockData.tradingData[0].c;
+            const increment = getStrikeIncrement(currentPrice);
+            const strikePrices = generateStrikePrices(currentPrice, increment);
+            const fridays = getNextFridays();
+
+            let html = '';
+
+            fridays.forEach((friday, fridayIndex) => {
+                const options = strikePrices.map(strike =>
+                    generateMockOptions(currentPrice, friday, strike)
+                );
+
+                html += `
+                    <div class="border-bottom">
+                        <div class="bg-secondary bg-opacity-25 px-3 py-2">
+                            <h5 class="mb-0">Expiration: ${friday.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })}</h5>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th colspan="5" class="text-center text-success">CALLS</th>
+                                        <th class="text-center">STRIKE</th>
+                                        <th colspan="5" class="text-center text-danger">PUTS</th>
+                                    </tr>
+                                    <tr class="table-secondary">
+                                        <th class="small">Price</th>
+                                        <th class="small">Bid/Ask</th>
+                                        <th class="small">Vol</th>
+                                        <th class="small">OI</th>
+                                        <th class="small text-center">Buy</th>
+                                        <th class="small text-center fw-bold">$</th>
+                                        <th class="small">Price</th>
+                                        <th class="small">Bid/Ask</th>
+                                        <th class="small">Vol</th>
+                                        <th class="small">OI</th>
+                                        <th class="small text-center">Buy</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                options.forEach((option, index) => {
+                    const isATM = Math.abs(option.strike - currentPrice) < increment;
+                    const rowClass = isATM ? 'atm-row' : '';
+
+                    html += `
+                        <tr class="${rowClass}">
+                            <td class="fw-bold">$${option.call.price}</td>
+                            <td class="small">$${option.call.bid}/$${option.call.ask}</td>
+                            <td class="small">${option.call.volume}</td>
+                            <td class="small">${option.call.openInterest}</td>
+                            <td class="text-center">
+                                <button class="btn btn-success option-btn" onclick="handleBuyOption(${fridayIndex}, ${index}, 'call')">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                            </td>
+                            <td class="text-center fw-bold">$${option.strike}</td>
+                            <td class="fw-bold">$${option.put.price}</td>
+                            <td class="small">$${option.put.bid}/$${option.put.ask}</td>
+                            <td class="small">${option.put.volume}</td>
+                            <td class="small">${option.put.openInterest}</td>
+                            <td class="text-center">
+                                <button class="btn btn-danger option-btn" onclick="handleBuyOption(${fridayIndex}, ${index}, 'put')">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            elements.optionsTables.innerHTML = html;
+            elements.optionsChain.classList.remove('d-none');
+        };
+
+        // Handle buy option
+        window.handleBuyOption = (fridayIndex, optionIndex, type) => {
+            const currentPrice = stockData.tradingData[0].c;
+            const increment = getStrikeIncrement(currentPrice);
+            const strikePrices = generateStrikePrices(currentPrice, increment);
+            const fridays = getNextFridays();
+
+            const option = generateMockOptions(currentPrice, fridays[fridayIndex], strikePrices[optionIndex]);
+            selectedOption = { ...option, type };
+
+            // Update modal
+            document.getElementById('modalOptionType').textContent = type.toUpperCase();
+            document.getElementById('modalStrike').textContent = `$${option.strike}`;
+            document.getElementById('modalPremium').textContent = `$${option[type].ask}`;
+            document.getElementById('modalExpiration').textContent = option.expiration.toLocaleDateString();
+            document.getElementById('modalType').textContent = type;
+
+            updateCost();
+            resetSimulation();
+
+            currentModal = new bootstrap.Modal(document.getElementById('buyModal'));
+            currentModal.show();
+        };
+
+        // Update cost calculation
+        const updateCost = () => {
+            if (!selectedOption) return;
+
+            const contracts = parseInt(elements.contractsInput.value) || 1;
+            const premium = parseFloat(selectedOption[selectedOption.type].ask);
+            const totalCost = premium * contracts * 100;
+
+            document.getElementById('totalCost').textContent = formatCurrency(totalCost);
+            document.getElementById('costBreakdown').textContent =
+                `${contracts} contracts × ${formatCurrency(premium)} × 100 shares`;
+        };
+
+        // Reset simulation
+        const resetSimulation = () => {
+            document.getElementById('simulationResult').classList.add('d-none');
+            document.getElementById('simulationButtons').classList.add('d-none');
+            document.getElementById('simulateBtn').classList.remove('d-none');
+        };
+
+        // Execute simulation
+        const executeSimulation = () => {
+            if (!selectedOption || !stockData) return;
+
+            const currentPrice = stockData.tradingData[0].c;
+            const premium = parseFloat(selectedOption[selectedOption.type].ask);
+            const contracts = parseInt(elements.contractsInput.value) || 1;
+            const volatility = parseFloat(selectedOption[selectedOption.type].impliedVolatility);
+
+            const finalPrice = simulateStockMovement(currentPrice, selectedOption.expiration, volatility);
+            const pl = calculateOptionPL(selectedOption, selectedOption.type, finalPrice, contracts, premium);
+
+            // Update simulation result
+            document.getElementById('finalPrice').textContent = formatCurrency(pl.finalStockPrice);
+            document.getElementById('simTotalCost').textContent = formatCurrency(pl.totalCost);
+            document.getElementById('totalValue').textContent = formatCurrency(pl.totalValue);
+
+            const profitLossEl = document.getElementById('profitLoss');
+            const returnEl = document.getElementById('returnPercent');
+
+            profitLossEl.textContent = `${pl.profitLoss >= 0 ? '+' : ''}${formatCurrency(pl.profitLoss)}`;
+            returnEl.textContent = `${pl.returnPercent >= 0 ? '+' : ''}${pl.returnPercent.toFixed(1)}%`;
+
+            profitLossEl.className = `fw-bold ${pl.profitLoss >= 0 ? 'text-success' : 'text-danger'}`;
+            returnEl.className = `fw-bold ${pl.returnPercent >= 0 ? 'text-success' : 'text-danger'}`;
+
+            // Show results
+            document.getElementById('simulateBtn').classList.add('d-none');
+            document.getElementById('simulationResult').classList.remove('d-none');
+            document.getElementById('simulationButtons').classList.remove('d-none');
+        };
+
+        // Utility functions
+        const showLoading = (show) => {
+            if (show) {
+                elements.loading.classList.remove('d-none');
+                elements.stockInfo.classList.add('d-none');
+                elements.optionsChain.classList.add('d-none');
+            } else {
+                elements.loading.classList.add('d-none');
+            }
+        };
+
+        const showError = (message) => {
+            elements.error.textContent = message;
+            elements.error.classList.remove('d-none');
+            elements.stockInfo.classList.add('d-none');
+            elements.optionsChain.classList.add('d-none');
+        };
+
+        const hideError = () => {
+            elements.error.classList.add('d-none');
+        };
+
+        // Event listeners
+        elements.searchBtn.addEventListener('click', fetchStockData);
+
+        elements.tickerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchStockData();
+            }
+        });
+
+        elements.contractsInput.addEventListener('input', updateCost);
+
+        document.getElementById('simulateBtn').addEventListener('click', executeSimulation);
+
+        document.getElementById('runAgainBtn').addEventListener('click', executeSimulation);
+
+        document.getElementById('placeOrderBtn').addEventListener('click', () => {
+            alert('Order would be placed in real implementation');
+            currentModal.hide();
+            resetSimulation();
+        });
+
+        // Initialize with default ticker
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchStockData();
+        });
+    </script>
+</body>
+
+</html>

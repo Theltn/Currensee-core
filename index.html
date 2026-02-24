@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>An Investor (AI) — Main Menu</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1116;
+      /* page background */
+      --panel: #12161d;
+      /* panel background */
+      --card: #0f141a;
+      /* card background */
+      --elev: #0b0f14;
+      /* elevated/hover */
+      --border: #1d2a36;
+      /* borders */
+      --text: #e6f0f2;
+      /* primary text */
+      --muted: #b8c7cc;
+      /* secondary text */
+      --brand: #00b3b3;
+      /* teal */
+      --brand-2: #3ec7a7;
+      /* green-teal */
+      --brand-3: #3da8f5;
+      /* blue */
+      --danger: #ff5f73;
+      --warn: #ffcc66;
+      --good: #57d69a;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --radius-lg: 22px;
+      --maxw: 1200px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(61, 168, 245, 0.08), transparent),
+        radial-gradient(800px 500px at 90% 10%, rgba(0, 179, 179, 0.08), transparent),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--brand-3);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Header */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: saturate(130%) blur(10px);
+      background: linear-gradient(180deg, rgba(5, 8, 12, 0.85), rgba(5, 8, 12, 0.65));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      margin: 0 auto;
+      /* was: max-width: var(--maxw) * 1.05;  (invalid CSS) */
+      max-width: calc(var(--maxw) * 1.1);
+      /* 10% wider header */
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .4px;
+    }
+
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--brand), var(--brand-3));
+      color: #031318;
+      box-shadow: var(--shadow);
+    }
+
+    .logo span {
+      font-size: 17px;
+      color: var(--text);
+    }
+
+    .back-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 14px;
+      padding: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      transition: background 0.2s ease;
+    }
+
+    .back-arrow:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Right side rail holds search + auth pills */
+    .right-rail {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      /* allow shrinking */
+    }
+
+    /* Keep search width nice and steady */
+    .search {
+      position: relative;
+      /* original had two .search blocks; this consolidates & allows shrink */
+      flex: 0 1 420px;
+      max-width: 420px;
+      margin-left: 0;
+      min-width: 0;
+      /* allow shrinking */
+    }
+
+    .search input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 42px 12px 44px;
+      border-radius: 12px;
+      outline: none;
+      transition: border .2s ease;
+    }
+
+    .search input:focus {
+      border-color: var(--brand-2);
+      box-shadow: 0 0 0 3px rgba(0, 179, 179, .15);
+    }
+
+    .search svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: .7;
+    }
+
+    .kbd {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 12px;
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 6px;
+      opacity: .85;
+    }
+
+    /* Auth buttons cluster */
+    .auth-rail {
+      display: flex;
+      gap: 8px;
+      flex-wrap: nowrap;
+      min-width: 0;
+    }
+
+    /* Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 22px;
+      max-width: var(--maxw);
+      margin: 28px auto;
+      padding: 0 20px 60px;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+        height: auto;
+      }
+    }
+
+    /* Sidebar TOC */
+    .toc {
+      position: sticky;
+      top: 76px;
+      height: calc(100vh - 90px);
+      overflow: auto;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(17, 24, 31, .55), rgba(17, 24, 31, .35));
+    }
+
+    .toc h3 {
+      margin: 6px 0 14px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+
+    .toc a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: var(--muted);
+      border: 1px solid transparent;
+    }
+
+    .toc a:hover {
+      color: var(--text);
+      border-color: var(--border);
+      background: var(--elev);
+    }
+
+    .toc a.active {
+      color: var(--text);
+      background: linear-gradient(90deg, rgba(0, 179, 179, .18), rgba(61, 168, 245, .18));
+      border-color: rgba(0, 179, 179, .3);
+    }
+
+    .toc .group {
+      margin-bottom: 12px;
+    }
+
+    /* Main */
+    .hero {
+      background: linear-gradient(135deg, rgba(0, 179, 179, .18), rgba(61, 168, 245, .14));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      letter-spacing: .3px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 70ch;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(15, 20, 26, .55);
+    }
+
+    .grid {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      grid-column: span 12;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .card {
+        grid-column: span 12;
+      }
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #0b1117, #0f171f);
+      white-space: nowrap;
+      /* <-- keep pill text on one line */
+    }
+
+    /* Sections */
+    section {
+      scroll-margin-top: 90px;
+    }
+
+    .section {
+      margin-top: 32px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .section h2 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Definition list */
+    .defs {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr;
+      gap: 12px;
+    }
+
+    .defs dt {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .defs dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    /* Accordion */
+    .accordion {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .acc-item+.acc-item {
+      border-top: 1px solid var(--border);
+    }
+
+    .acc-head {
+      width: 100%;
+      text-align: left;
+      background: #0c1016;
+      color: var(--text);
+      border: 0;
+      padding: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .acc-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .25s ease;
+      background: #0d131a;
+    }
+
+    .acc-body-inner {
+      padding: 16px;
+      color: var(--muted);
+    }
+
+    .chev {
+      transition: transform .25s ease;
+      opacity: .8;
+    }
+
+    .acc-item.open .chev {
+      transform: rotate(180deg);
+    }
+
+    /* Calculator */
+    .calc {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .calc .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .calc label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .calc input,
+    .calc select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .calc input:focus,
+    .calc select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0, 179, 179, .15);
+    }
+
+    .calc .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--brand), var(--brand-3));
+      color: #04222a;
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .metric .k {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric .v {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    /* Payoff diagram */
+    .chart {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      height: 260px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .axis {
+      position: absolute;
+      left: 44px;
+      right: 10px;
+      bottom: 36px;
+      top: 10px;
+      border-left: 1px solid #274155;
+      border-bottom: 1px solid #274155;
+    }
+
+    .line {
+      position: absolute;
+      left: 44px;
+      right: 10px;
+      bottom: 36px;
+      top: 10px;
+    }
+
+    .line:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, rgba(0, 179, 179, .55), rgba(61, 168, 245, .55));
+      mask: linear-gradient(#fff 0 0) 0 0 / 100% 2px no-repeat;
+      -webkit-mask: linear-gradient(#fff 0 0) 0 0 / 100% 2px no-repeat;
+    }
+
+    .legend {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #0b0f14;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    thead th {
+      background: #0d131a;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+    }
+
+    tbody tr:hover {
+      background: #0c1117;
+    }
+
+    /* Footer */
+    footer {
+      margin: 40px auto 80px;
+      max-width: var(--maxw);
+      padding: 0 20px;
+      color: var(--muted);
+    }
+
+    .disclaimer {
+      border: 1px dashed #274155;
+      border-radius: 12px;
+      padding: 14px;
+      background: #0b0f14;
+    }
+
+    /* Utilities */
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .right {
+      margin-left: auto;
+    }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      background: #0c1219;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .sep {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    /* --- Final overrides to prevent wrapping & allow more room --- */
+    .pill {
+      white-space: nowrap;
+    }
+
+    /* keep “Log In / Sign up” on one line */
+    .right-rail,
+    .search,
+    .auth-rail {
+      min-width: 0;
+    }
+
+    /* allow shrinking */
+    .search {
+      flex: 1 1 320px;
+      max-width: 480px;
+    }
+
+    /* allow smaller than 420 if needed */
+    @media (max-width: 1200px) {
+      .auth-rail .pill {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+    }
+
+    /* Auth buttons: same look as LoginAuth .btn-primary */
+    .ai-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 0;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+      /* never wrap */
+    }
+
+    .ai-btn-primary {
+      background: linear-gradient(135deg, var(--brand-2), var(--brand-3));
+      color: #fff;
+    }
+
+    .ai-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .ai-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* make room on tighter widths */
+    .right-rail,
+    .search,
+    .auth-rail {
+      min-width: 0;
+    }
+
+    .search {
+      flex: 1 1 320px;
+      max-width: 480px;
+    }
+
+    @media (max-width: 1200px) {
+      .auth-rail .ai-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+    }
+
+    /* Featured charts layout */
+    .featured h2 {
+      margin-top: 0;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .chart-card {
+      grid-column: span 6;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .chart-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 260px;
+    }
+
+    /* canvas auto-fills */
+
+    @media (max-width: 900px) {
+      .chart-card {
+        grid-column: span 12;
+      }
+    }
+
+    /* TEMP: remove left nav and let main span full width */
+    .toc {
+      display: none !important;
+    }
+
+    .layout {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* Full-bleed helper */
+    .full-bleed {
+      width: 100vw;
+      position: relative;
+      left: 50%;
+      right: 50%;
+      margin-left: -50vw;
+      margin-right: -50vw;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    #featured-charts.full-bleed .chart-grid {
+      max-width: min(1800px, 96vw);
+      margin: 0 auto;
+    }
+
+    #featured-charts .chart-wrap {
+      height: 340px;
+    }
+
+    /* taller, nicer */
+    @media (max-width: 900px) {
+      #featured-charts .chart-wrap {
+        height: 260px;
+      }
+    }
+
+    /* Featured charts */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .stock-card {
+      grid-column: span 6;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .stock-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 320px;
+      /* canvas fills this */
+    }
+
+    .stock-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .stock-card {
+        grid-column: span 12;
+      }
+
+      .chart-wrap {
+        height: 260px;
+      }
+    }
+
+    /* Learn Options teaser */
+    .learn-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .learn-head h2 {
+      margin: 0;
+    }
+
+    .learn-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .learn-card {
+      grid-column: span 4;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-decoration: none;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition: transform .1s ease, filter .2s ease, border-color .2s ease;
+    }
+
+    .learn-card:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      border-color: rgba(0, 179, 179, .35);
+    }
+
+    .learn-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      background: #0b1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .learn-title {
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .learn-desc {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .learn-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: linear-gradient(180deg, #0b1117, #0f171f);
+    }
+
+    @media (max-width: 1000px) {
+      .learn-card {
+        grid-column: span 6;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .learn-card {
+        grid-column: span 12;
+      }
+    }
+  </style>
+
+  <!-- Core Chart.js (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- Time adapter -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <!-- Financial plugin (candlesticks) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1"></script>
+
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <!-- <a href="index.html" class="back-arrow" title="Back to Home">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 5l-7 7 7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        </a> -->
+      <img src="AnInvestorLogo.png" alt="An Investor (AI) Logo" style="height:40px; width:auto; margin-right:14px;" />
+      <span>An Investor <span style="opacity:.7"></span></span>
+      <nav class="row" aria-label="Primary">
+        <a href="dashboard.html" class="pill requires-auth" id="linkDashboard">Trading Dashboard</a>
+        <a href="OptionsCenter.html" class="pill">Options Hub</a>
+        <a href="Portfolio.html" class="pill requires-auth" id="linkPortfolio">Portfolio</a>
+        <a href="AskAI.html" class="pill requires-auth">Ask An Investor</a>
+        <a href="optionsPlayground.html" class="pill requires-auth">Options Playground</a>
+
+      </nav>
+      <div class="right-rail">
+        <div class="search" role="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 21l-4.35-4.35" stroke="#8db0bd" stroke-width="2" stroke-linecap="round" />
+            <circle cx="11" cy="11" r="7" stroke="#8db0bd" stroke-width="2" />
+          </svg>
+          <input id="search" placeholder="Search topics… ( / )" aria-label="Search" />
+          <div class="kbd">/</div>
+        </div>
+        <div class="auth-rail">
+          <a href="LoginAuth.html" class="ai-btn ai-btn-primary" id="navAuth">Log In / Sign up</a>
+          <a href="#" class="ai-btn ai-btn-primary" id="navLogout" style="display:none">Log out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+
+    <!-- <aside class="toc">
+      <h3>Navigation</h3>
+      <div class="group">
+        <a href="#markets" class="toc-link">Markets</a>
+        <a href="#industries" class="toc-link">Industries</a>
+      </div>
+    </aside> -->
+
+    <!-- Main -->
+    <main>
+      <!-- Hero -->
+      <section class="hero">
+        <h1>Welcome to An Investor</h1>
+        <p>Our hackathon platform for options trading insights. Our goal is to demystify the complexities of options
+          trading while giving a basic overview on markets, industries, porfolio tracking and much more. Everything you
+          need to know to be An Investor.</p>
+        <div class="tags">
+          <span class="tag">Fidelity Hackathon 2025</span>
+          <span class="tag">Options Trading</span>
+          <span class="tag">Real Time Dashboards</span>
+        </div>
+      </section>
+
+      <section class="section" id="featured">
+        <h2>Daily Featured Price Charts</h2>
+        <div class="chart-grid" id="featuredContainer"></div>
+      </section>
+
+      <section class="section learn" id="learn-options">
+        <div class="learn-head">
+          <h2>Learn Options</h2>
+          <a class="pill" href="OptionsCenter.html">Explore all lessons →</a>
+        </div>
+
+        <div class="learn-grid">
+          <!-- Calls vs Puts -->
+          <a href="OptionsCenter.html#calls-puts" class="learn-card">
+            <div class="learn-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h10" stroke="url(#g1)" stroke-width="2" stroke-linecap="round" />
+                <defs>
+                  <linearGradient id="g1" x1="0" y1="0" x2="24" y2="24">
+                    <stop stop-color="var(--brand)" />
+                    <stop offset="1" stop-color="var(--brand-3)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="learn-title">Calls vs Puts</div>
+            <p class="learn-desc">Rights, obligations, and basic payoffs—when traders pick each.</p>
+            <div class="learn-meta">
+              <span class="chip">Beginner</span><span class="chip">5 min</span>
+            </div>
+          </a>
+
+          <!-- Strike & Breakeven -->
+          <a href="OptionsCenter.html#strike-breakeven" class="learn-card">
+            <div class="learn-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 20l6-6 4 4 6-10" stroke="url(#g2)" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <defs>
+                  <linearGradient id="g2" x1="0" y1="0" x2="24" y2="24">
+                    <stop stop-color="var(--brand-2)" />
+                    <stop offset="1" stop-color="var(--brand-3)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="learn-title">Strike &amp; Breakeven</div>
+            <p class="learn-desc">Pick strikes with moneyness & delta; compute breakeven quickly.</p>
+            <div class="learn-meta">
+              <span class="chip">Interactive</span><span class="chip">8 min</span>
+            </div>
+          </a>
+
+          <!-- Quick Calculator -->
+          <a href="OptionsCenter.html#calculator" class="learn-card">
+            <div class="learn-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 5h6M9 12h6M9 15h6"
+                  stroke="url(#g3)" stroke-width="2" stroke-linecap="round" />
+                <defs>
+                  <linearGradient id="g3" x1="0" y1="0" x2="24" y2="24">
+                    <stop stop-color="var(--brand)" />
+                    <stop offset="1" stop-color="var(--brand-2)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="learn-title">Quick Calculator</div>
+            <p class="learn-desc">Plug strike & premium; get breakeven and max risk instantly.</p>
+            <div class="learn-meta">
+              <span class="chip">Tool</span><span class="chip">2 min</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+
+
+      <!-- Top Stocks -->
+      <section id="industries" class="section">
+        <h2>Top Stocks by Industry</h2>
+        <!-- Industries -->
+        <section id="industries" class="section">
+          <h2>Industries</h2>
+          <div class="grid">
+            <!-- Technology -->
+            <div class="card">
+              <h3>Technology</h3>
+              <p class="muted">Leaders in software, hardware, and internet services.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Apple</td>
+                    <td>$215.32</td>
+                    <td><span class="pill">+1.5%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Google</td>
+                    <td>$145.67</td>
+                    <td><span class="pill">+0.9%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Meta</td>
+                    <td>$382.14</td>
+                    <td><span class="pill danger">-0.3%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Healthcare -->
+            <div class="card">
+              <h3>Healthcare</h3>
+              <p class="muted">Companies driving medical innovation and services.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Pfizer</td>
+                    <td>$41.12</td>
+                    <td><span class="pill">+0.4%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Johnson &amp; Johnson</td>
+                    <td>$162.45</td>
+                    <td><span class="pill danger">-1.2%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Moderna</td>
+                    <td>$123.90</td>
+                    <td><span class="pill">+2.7%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Farming -->
+            <div class="card">
+              <h3>Farming</h3>
+              <p class="muted">Agriculture, crop production, and equipment makers.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>John Deere</td>
+                    <td>$378.21</td>
+                    <td><span class="pill">+0.8%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Archer Daniels Midland</td>
+                    <td>$84.56</td>
+                    <td><span class="pill danger">-0.5%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Bunge Ltd.</td>
+                    <td>$115.72</td>
+                    <td><span class="pill">+1.1%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pharmaceuticals -->
+            <div class="card">
+              <h3>Pharmaceuticals</h3>
+              <p class="muted">Firms focused on drug discovery and treatments.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Novartis</td>
+                    <td>$94.12</td>
+                    <td><span class="pill">+0.6%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Merck &amp; Co.</td>
+                    <td>$124.34</td>
+                    <td><span class="pill danger">-0.4%</span></td>
+                  </tr>
+                  <tr>
+                    <td>AstraZeneca</td>
+                    <td>$72.45</td>
+                    <td><span class="pill">+1.3%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Business Services -->
+            <div class="card">
+              <h3>Business Services</h3>
+              <p class="muted">Consulting, logistics, and professional service firms.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Accenture</td>
+                    <td>$348.56</td>
+                    <td><span class="pill">+0.7%</span></td>
+                  </tr>
+                  <tr>
+                    <td>UPS</td>
+                    <td>$154.89</td>
+                    <td><span class="pill danger">-0.9%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Energy -->
+            <div class="card">
+              <h3>Energy</h3>
+              <p class="muted">Oil, gas, and renewable energy companies.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>ExxonMobil</td>
+                    <td>$118.67</td>
+                    <td><span class="pill">+0.5%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Chevron</td>
+                    <td>$152.34</td>
+                    <td><span class="pill danger">-1.1%</span></td>
+                  </tr>
+                  <tr>
+                    <td>NextEra Energy</td>
+                    <td>$73.45</td>
+                    <td><span class="pill">+2.4%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Real Estate -->
+            <div class="card">
+              <h3>Real Estate</h3>
+              <p class="muted">Property developers and REITs.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Prologis</td>
+                    <td>$122.45</td>
+                    <td><span class="pill">+1.0%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Simon Property Group</td>
+                    <td>$108.21</td>
+                    <td><span class="pill danger">-0.7%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Automotive -->
+            <div class="card">
+              <h3>Automotive</h3>
+              <p class="muted">Traditional and electric vehicle manufacturers.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Tesla</td>
+                    <td>$265.89</td>
+                    <td><span class="pill danger">-0.8%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Ford</td>
+                    <td>$12.34</td>
+                    <td><span class="pill">+0.6%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Toyota</td>
+                    <td>$193.45</td>
+                    <td><span class="pill">+1.1%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Finance -->
+            <div class="card">
+              <h3>Finance</h3>
+              <p class="muted">Banks, asset managers, and payment processors.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>JPMorgan Chase</td>
+                    <td>$167.89</td>
+                    <td><span class="pill">+0.9%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Goldman Sachs</td>
+                    <td>$385.21</td>
+                    <td><span class="pill danger">-0.5%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Visa</td>
+                    <td>$242.11</td>
+                    <td><span class="pill">+1.2%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Consumer Goods -->
+            <div class="card">
+              <h3>Consumer Goods</h3>
+              <p class="muted">Brands that shape everyday life.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Procter &amp; Gamble</td>
+                    <td>$154.45</td>
+                    <td><span class="pill">+0.3%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Nike</td>
+                    <td>$98.32</td>
+                    <td><span class="pill danger">-0.4%</span></td>
+                  </tr>
+                  <tr>
+                    <td>Coca-Cola</td>
+                    <td>$61.22</td>
+                    <td><span class="pill">+0.5%</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- Footer -->
+        <footer>
+          <div class="disclaimer">
+            <p><strong>Disclaimer:</strong> This dashboard is a hackathon project and not financial advice. Data shown
+              is mock/demo data.</p>
+          </div>
+        </footer>
+    </main>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const getCookie = (name) => {
+        const c = decodeURIComponent(document.cookie).split('; ');
+        let v = null; c.forEach(e => { if (e.indexOf(name + '=') === 0) v = e.substring(name.length + 1); });
+        return v;
+      };
+      const u = getCookie('username');
+      const LoginButton = document.getElementById('LoginButton');
+      const SignupButton = document.getElementById('SignupButton');
+      const LogoutButton = document.getElementById('logoutButton');
+      if (u) {
+        LoginButton?.classList.add('d-none');
+        SignupButton?.classList.add('d-none');
+        LogoutButton?.classList.remove('d-none');
+      } else {
+        LoginButton?.classList.remove('d-none');
+        SignupButton?.classList.remove('d-none');
+        LogoutButton?.classList.add('d-none');
+      }
+    });
+  </script>
+
+  <script>
+
+    const links = document.querySelectorAll('.toc-link');
+    const sections = [...links].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+    function onScroll() {
+      const y = window.scrollY + 120;
+      let activeIndex = 0;
+      sections.forEach((sec, i) => { if (sec.offsetTop <= y) activeIndex = i; });
+      links.forEach((l, i) => l.classList.toggle('active', i === activeIndex));
+    }
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+
+    // Local smooth scrolling
+    links.forEach(l => l.addEventListener('click', e => { e.preventDefault(); document.querySelector(l.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }); }));
+
+    // Accordion behavior
+    document.querySelectorAll('.acc-head').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.acc-item');
+        const body = item.querySelector('.acc-body');
+        const open = item.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+        body.style.maxHeight = open ? body.scrollHeight + 'px' : 0;
+      });
+    });
+
+    function renderMiniChart(canvasId, data, color = '#3da8f5') {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map((_, i) => i), // placeholder time axis
+          datasets: [{
+            data,
+            borderColor: color,
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3, // smooth line
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          layout: {
+            padding: 0 // removes extra whitespace
+          },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false, grid: { display: false, drawBorder: false } },
+            y: { display: false, grid: { display: false, drawBorder: false } }
+          }
+        }
+      });
+    }
+
+    // Example demo data
+    // Demo data (mock)
+    const sampleUp = [100, 101, 102, 103, 104, 105];
+    const sampleDown = [200, 199, 198, 197, 196, 195];
+    const sampleFlat = [50, 50.2, 49.8, 50.1, 50.0, 50.1];
+
+    // Markets
+    renderMiniChart("chart-sp500", sampleUp, "#57d69a");
+    renderMiniChart("chart-dow", sampleDown, "#ff5f73");
+    renderMiniChart("chart-nasdaq", sampleUp, "#3da8f5");
+
+    // Technology
+    renderMiniChart("chart-aapl", sampleUp, "#57d69a");
+    renderMiniChart("chart-googl", sampleUp, "#3da8f5");
+    renderMiniChart("chart-meta", sampleDown, "#ff5f73");
+    renderMiniChart("chart-msft", sampleUp, "#57d69a");
+
+    // Healthcare
+    renderMiniChart("chart-pfe", sampleFlat, "#3ec7a7");
+    renderMiniChart("chart-jnj", sampleDown, "#ff5f73");
+    renderMiniChart("chart-mrna", sampleUp, "#57d69a");
+
+    // Farming
+    renderMiniChart("chart-de", sampleUp, "#57d69a");
+    renderMiniChart("chart-adm", sampleFlat, "#3ec7a7");
+    renderMiniChart("chart-bg", sampleUp, "#3da8f5");
+
+    // Pharmaceuticals
+    renderMiniChart("chart-nvs", sampleUp, "#57d69a");
+    renderMiniChart("chart-mrk", sampleDown, "#ff5f73");
+    renderMiniChart("chart-azn", sampleFlat, "#3ec7a7");
+
+    // Business
+    renderMiniChart("chart-acn", sampleUp, "#57d69a");
+    renderMiniChart("chart-ups", sampleDown, "#ff5f73");
+
+    // Energy
+    renderMiniChart("chart-xom", sampleUp, "#57d69a");
+    renderMiniChart("chart-cvx", sampleDown, "#ff5f73");
+    renderMiniChart("chart-nee", sampleUp, "#3ec7a7");
+
+    // Real Estate
+    renderMiniChart("chart-pld", sampleUp, "#57d69a");
+    renderMiniChart("chart-spg", sampleDown, "#ff5f73");
+    renderMiniChart("chart-cbre", sampleFlat, "#3ec7a7");
+
+    // Automotive
+    renderMiniChart("chart-tsla", sampleDown, "#ff5f73");
+    renderMiniChart("chart-f", sampleUp, "#57d69a");
+    renderMiniChart("chart-tm", sampleUp, "#3da8f5");
+
+    // Finance
+    renderMiniChart("chart-jpm", sampleUp, "#57d69a");
+    renderMiniChart("chart-gs", sampleDown, "#ff5f73");
+    renderMiniChart("chart-v", sampleUp, "#3da8f5");
+
+    // Consumer Goods
+    renderMiniChart("chart-pg", sampleUp, "#57d69a");
+    renderMiniChart("chart-nke", sampleDown, "#ff5f73");
+    renderMiniChart("chart-ko", sampleFlat, "#3ec7a7");
+  </script>
+  <script>
+    (function () {
+      function getCookie(name) {
+        const c = decodeURIComponent(document.cookie).split('; ');
+        let v = null; c.forEach(e => { if (e.indexOf(name + '=') === 0) v = e.substring(name.length + 1); });
+        return v;
+      }
+      function deleteCookies() {
+        document.cookie.split(';').forEach(cookie => {
+          const eq = cookie.indexOf('=');
+          const nm = (eq > -1 ? cookie.substring(0, eq) : cookie).trim();
+          document.cookie = nm + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        });
+      }
+
+      const isAuthed = () => !!getCookie('username');
+      const navAuth = document.getElementById('navAuth');
+      const navLogout = document.getElementById('navLogout');
+
+      // Toggle auth / logout pills on load
+      if (isAuthed()) {
+        if (navAuth) navAuth.style.display = 'none';
+        if (navLogout) navLogout.style.display = '';
+      } else {
+        if (navAuth) navAuth.style.display = '';
+        if (navLogout) navLogout.style.display = 'none';
+      }
+
+      // Gate any link that requires auth
+      document.querySelectorAll('a.requires-auth').forEach(a => {
+        a.addEventListener('click', (e) => {
+          if (!isAuthed()) {
+            e.preventDefault();
+            const dest = a.getAttribute('href') || '/';
+            window.location.href = `LoginAuth.html?redirect=${encodeURIComponent(dest)}`;
+          }
+        });
+      });
+
+      // Logout: wipe cookies and refresh
+      navLogout?.addEventListener('click', (e) => {
+        e.preventDefault();
+        deleteCookies();
+        window.location.reload();
+      });
+    })();
+  </script>
+  <script type="module" src="./chart.js"></script>
+  <script type="module" src="./main.js"></script>
+  <script>
+    // Simple auth gate for protected links
+    document.addEventListener('DOMContentLoaded', () => {
+      const loggedIn = document.cookie.split('; ').some(c => c.startsWith('username='));
+      document.querySelectorAll('a.requires-auth').forEach(a => {
+        a.addEventListener('click', (e) => {
+          if (!loggedIn) {
+            e.preventDefault();
+            // remember where they wanted to go (optional)
+            const dest = a.getAttribute('href') || 'index.html';
+            const url = new URL('LoginAuth.html', location.href);
+            url.searchParams.set('redirect', dest);
+            window.location.href = url.toString();
+          }
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>

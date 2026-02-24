@@ -1,0 +1,7 @@
+## First time (or after a big pull)
+npm run setup
+
+## Daily development
+npm run dev
+# - SERVER on http://localhost:4000
+# - CLIENT on http://localhost:5173 (Vite)

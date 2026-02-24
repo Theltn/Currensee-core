@@ -1,0 +1,67 @@
+@env=dev
+POST http://localhost:4000/users/signup
+Content-Type: application/json
+
+{
+    "email":"walterWhite@gmail.com","password":"crystalBlue123"
+}
+###
+GET http://localhost:4000/stocks/AAPL
+Content-Type: application/json
+Authorization: Bearer 
+
+{
+    "ticker":"AAPL"
+}
+###
+GET https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AAPL&apikey=681d260bf43948c09aa6284b`;
+Content-Type: application/json
+
+### GET stock
+GET http://localhost:4000/stocks/AAPL
+Content-Type: application/json
+
+{
+    "ticker":"AAPL"
+}
+### GET all stock
+GET http://localhost:4000/stocks/
+Content-Type: application/json
+
+
+### GET stock
+GET https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=TSLA&apikey=SMPICQ6GQ5HO959X
+Content-Type: application/json
+
+
+### GETS existing user
+POST http://localhost:4000/users/login
+Content-Type: application/json
+
+{
+    "email":"walterWhite@gmail.com","password":"crystalBlue123"
+}
+
+### create Comment
+POST http://localhost:4000/comments/create
+Content-Type: application/json
+
+{
+    "ticker":"AAPL", "username":"1", "comment":"example comment"
+}
+### get Comments
+POST http://localhost:4000/users/getPositions
+Content-Type: application/json
+
+{
+    "username":"new"
+}
+
+
+### GET
+GET GET https://api.massive.com/v2/aggs/ticker/MSFT/range/1/day/2023-01-09/2023-02-10?adjusted=true&sort=asc&limit=120&apiKey=
+Content-Type: application/json
+
+### GET
+GET https://api.massive.com/v3/reference/options/contracts?underlying_ticker=AAPL&limit=50&apiKey=
+Content-Type: application/json
