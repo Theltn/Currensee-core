@@ -1,9 +1,11 @@
 // --- Load env FIRST ---
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 
 const app = express();
@@ -21,9 +23,18 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',                  // another common Vite port
 ].filter(Boolean);
 
-// ---------- Middleware ----------
+// ---------- Security Middleware ----------
+app.use(helmet());
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(apiLimiter);
+
 app.use(express.json());
-app.use(cookieParser());
 app.use(
   cors({
     origin: (origin, cb) => {
