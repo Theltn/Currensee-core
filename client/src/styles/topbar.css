@@ -1,0 +1,45 @@
+/* topbar.css */
+.topbar {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: background var(--ts-smooth);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.nav-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.pill {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary);
+  transition: all var(--ts-fast);
+}
+
+.pill:hover {
+  background: var(--color-bg-glass-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+  transform: translateY(-1px);
+}
