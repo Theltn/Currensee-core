@@ -1,6 +1,7 @@
 // aiRoute.js
 const express = require('express');
 const router = express.Router();
+const requireAuth = require('../middleware/authToken');
 
 // Node 18+ has global fetch; otherwise lazy-load node-fetch
 const doFetch = (typeof fetch === 'function')
@@ -52,7 +53,7 @@ router.get('/health', (req, res) => {
 });
 
 // Main ask endpoint
-router.post('/ask', rateLimit, aiControls, async (req, res) => {
+router.post('/ask', requireAuth, rateLimit, aiControls, async (req, res) => {
   try {
     const question = (req.body?.question || '').trim();
     if (!question) return res.status(400).json({ error: 'Ask a real question.' });

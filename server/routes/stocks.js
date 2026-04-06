@@ -1,13 +1,13 @@
 // express
 const express = require("express");
 const router = express.Router();
-const { authToken } = require("../middleware/authToken");
+const requireAuth = require("../middleware/authToken");
 
-//  imports
+// imports
 const { getStockPrices, getStock, getStockLogo } = require("../controllers/stockController");
 
-router.get("/all", authToken, getStockPrices);
+router.get("/all", requireAuth, getStockPrices);
 router.get("/logo/:ticker", getStockLogo);
-router.post("/:ticker", authToken, getStock);
+router.post("/:ticker", requireAuth, getStock);
 
 module.exports = router;

@@ -1,21 +1,24 @@
-const jwt = require("jsonwebtoken");
-const webkey = process.env.JWT_SECRET || process.env.VITE_JSON_WEB_KEY;
+const admin = require('../firebase-admin');
 
-const authToken = (req, res, next) => {
-  console.log("Cookies received:", req.cookies);
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ message: "No token provided." });
-  }
+const requireAuth = async (req, res, next) => {
   try {
-    const user = jwt.verify(token, webkey);
-    req.user = user;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or malformed Authorization header' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    
+    // Verify the Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    
+    // Attach decoded user onto req
+    req.user = decodedToken;
     next();
-  } catch {
-    res.clearCookie("token");
-    console.log("Cookie monster ate ur cookies");
-    res.status(401).json({ message: "Session expired. Please log in again." });
+  } catch (err) {
+    console.error('Firebase Auth Error validating token:', err);
+    return res.status(401).json({ error: 'Unauthorized: Invalid ID token' });
   }
 };
 
-module.exports = { authToken };
+module.exports = requireAuth;

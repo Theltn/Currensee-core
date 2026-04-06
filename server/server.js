@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const { MongoClient } = require('mongodb'); // optional if you use Mongo
+
 
 const app = express();
 
@@ -49,40 +49,14 @@ app.get('/', (req, res) => {
 });
 
 const stocksRouter = require('./routes/stocks');
-const usersRouter = require('./routes/users');
-const commentsRouter = require('./routes/comments');
-
 const aiRouter = require('./routes/aiRoute.js');
 app.use('/api/ai', aiRouter);
 app.use('/stocks', stocksRouter);
-app.use('/users', usersRouter);
-app.use('/comments', commentsRouter);
 
 // ---------- MongoDB (optional but recommended) ----------
-const uri = (
-  process.env.MONGODB_URI ||
-  process.env.MONGO_URI ||
-  process.env.VITE_MONGO_URI ||
-  ''
-).trim();
-let mongoClient;
-
-/**
- * Start server after DB is (optionally) ready.
- * If no MONGODB_URI is set, we still start the API (routes that use DB should handle absence).
- */
 async function start() {
   try {
-    if (uri) {
-      mongoClient = new MongoClient(uri);
-      await mongoClient.connect();
-      console.log('✅ MongoDB connected');
-      // You can pass db to routers if needed:
-      // const db = mongoClient.db(process.env.DB_NAME || 'mydb');
-      // app.set('db', db);
-    } else {
-      console.warn('⚠️  MONGODB_URI not set; starting API without DB connection.');
-    }
+    console.log('✅ Express API Proxy starting without local MongoDB state.');
 
     app.listen(PORT, () => {
       console.log(`🚀 API listening on http://localhost:${PORT}`);
@@ -99,7 +73,6 @@ async function start() {
 start();
 
 // ---------- Graceful shutdown ----------
-process.on('SIGINT', async () => {
-  try { if (mongoClient) await mongoClient.close(); } catch { }
+process.on('SIGINT', () => {
   process.exit(0);
 });

@@ -1,10 +1,9 @@
-const { connectToDB } = require("../db/mongoClient");
 const axios = require("axios");
 
 // Utility: Fetch stock metadata from Polygon
 async function fetchPolygonStockMeta(ticker) {
   const apiKey = process.env.POLYGON_API_KEY || process.env.VITE_POLYGON_API_KEY;
-  const url = `https://api.massive.com/v3/reference/tickers/${ticker}?apiKey=${apiKey}`;
+  const url = `https://api.polygon.io/v3/reference/tickers/${ticker}?apiKey=${apiKey}`;
   const response = await axios.get(url);
   const { results } = response.data;
 
@@ -13,10 +12,9 @@ async function fetchPolygonStockMeta(ticker) {
     name: results.name,
     description: results.description,
     market_cap: results.market_cap,
-    logo: results.branding.icon_url,
+    logo: results.branding?.icon_url || '',
   };
 }
-
 
 async function fetchPolygonQuote(ticker) {
   const apiKey = process.env.POLYGON_API_KEY || process.env.VITE_POLYGON_API_KEY;
@@ -31,13 +29,10 @@ async function fetchPolygonQuote(ticker) {
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
   const formattedDate = formatDate(today); // YYYY-MM-DD
   const pastDate = formatDate(sixMonthsAgo); // YYYY-MM-DD
-  console.log("formatted date ", formattedDate, " past date ", pastDate)
-  //  console.log("formatted date ", formattedDate," past date ", pastDate)
-  //                                                                    v this could be changed to have the time type passed in
-  const url = `https://api.massive.com/v2/aggs/ticker/${ticker}/range/1/day/${pastDate}/${formattedDate}?adjusted=true&sort=asc&limit=200&apiKey=${apiKey}`;
+  
+  const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${pastDate}/${formattedDate}?adjusted=true&sort=asc&limit=200&apiKey=${apiKey}`;
   const response = await axios.get(url);
-  //  console.log("Polygon response.data", response.data.results);
-  return response.data.results;
+  return response.data.results || [];
 }
 
 const getStockLogo = async (req, res) => {
@@ -52,25 +47,12 @@ const getStockLogo = async (req, res) => {
   }
 
   try {
-    const db = await connectToDB();
-    const stocks = db.collection("stocks");
-    let stock = await stocks.findOne({ ticker });
-
-    if (!stock) {
-      const newStock = await fetchPolygonStockMeta(ticker);
-      await stocks.updateOne(
-        { ticker },
-        { $set: newStock },
-        { upsert: true }
-      );
-      stock = newStock;
-    }
-
-    if (!stock?.logo) {
+    const stockMeta = await fetchPolygonStockMeta(ticker);
+    if (!stockMeta?.logo) {
       return res.status(404).json({ error: "Logo not found for ticker." });
     }
 
-    const logoUrl = new URL(stock.logo);
+    const logoUrl = new URL(stockMeta.logo);
     logoUrl.searchParams.set("apiKey", apiKey);
 
     const response = await axios.get(logoUrl.toString(), {
@@ -89,78 +71,38 @@ const getStockLogo = async (req, res) => {
   }
 };
 
-// GET /api/stocks — return all stock entries from DB
 const getStockPrices = async (req, res) => {
-  try {
-    const db = await connectToDB();
-    const stocks = await db.collection("stocks").find({}).toArray();
-    console.log('stocks from db ', stocks);
-    res.json(stocks);
-  } catch (error) {
-    console.error("Error fetching stock prices:", error);
-    res.status(500).json({ error: "Failed to retrieve stock data." });
-  }
+  // Legacy function that returned all DB entries. Since Mongo is gone, 
+  // return an empty array or a preset array if Dashboards still fetch /all.
+  res.json([]); 
 };
 
-// POST /api/stocks — upsert a stock entry
+// POST /api/stocks — proxys the polygon logic without syncing into local DB
 const getStock = async (req, res) => {
   const { ticker } = req.body;
 
   if (!ticker) {
     return res.status(400).json({ error: "Ticker is required." });
   }
-
   const upperTicker = ticker.trim().toUpperCase();
 
   try {
-    const db = await connectToDB();
-    const stocks = db.collection("stocks");
-
-    // Check if already in DB
-    let existing = await stocks.findOne({ ticker: upperTicker });
-
-    // If not found, fetch and insert
-    if (!existing) {
-      console.log(
-        `Ticker ${upperTicker} not found in DB. Fetching from Polygon...`
-      );
-      try {
-        const newStock = await fetchPolygonStockMeta(upperTicker);
-        console.log('new stock ', newStock);
-        const result = await stocks.insertOne(newStock);
-        console.log(`Inserted ${upperTicker} with _id: ${result.insertedId}`);
-        existing = newStock;
-      } catch (err) {
-        console.error("Polygon API error:", err.response?.data || err.message);
-        return res
-          .status(502)
-          .json({ error: "Failed to fetch data from Polygon API." });
-      }
-    }
-
-    // Optionally update with polygon trading data
+    const meta = await fetchPolygonStockMeta(upperTicker);
+    let tradingData = [];
+    
     try {
-      //  const tradingData = await fetchAlphaVantageQuote(upperTicker);
-      const tradingData = await fetchPolygonQuote(upperTicker);
-
-      //  console.log("tradingData from polygon", tradingData);
-      //  check to prevent null from alphaVantage
-      if (tradingData !== null || tradingData == !undefined) {
-        await stocks.updateOne(
-          { ticker: upperTicker },
-          { $set: { tradingData } }
-        );
-        console.log("trading data updated from alphaVantage");
-        existing.tradingData = tradingData;
-      }
+      tradingData = await fetchPolygonQuote(upperTicker);
     } catch (err) {
       console.warn("Polygon trading data fetch failed (non-blocking):", err.message);
     }
 
-    return res.status(200).json(existing);
+    return res.status(200).json({
+      ...meta,
+      tradingData
+    });
   } catch (err) {
-    console.error("Internal server error:", err);
-    return res.status(500).json({ error: "Internal server error." });
+    console.error("Polygon API error:", err.response?.data || err.message);
+    return res.status(502).json({ error: "Failed to fetch data from Polygon API." });
   }
 };
 
