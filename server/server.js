@@ -81,9 +81,13 @@ async function start() {
   }
 }
 
-start();
+if (require.main === module) {
+  start();
+}
 
 // ---------- Graceful shutdown ----------
 process.on('SIGINT', () => {
   process.exit(0);
 });
+
+module.exports = app;

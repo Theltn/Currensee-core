@@ -10,6 +10,7 @@
     "npm": "10.8.2"
   },
   "scripts": {
+    "test": "jest",
     "setup": "npm ci && node scripts/prepare-env.js && npm run build",
     "dev": "concurrently -n SERVER,CLIENT -c auto \"npm:server:dev\" \"npm:client:dev\"",
     "server:start": "node server/server.js",
@@ -20,7 +21,9 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
+    "jest": "^30.3.0",
     "nodemon": "^3.1.0",
+    "supertest": "^7.2.2",
     "vite": "^7.1.2"
   },
   "dependencies": {
