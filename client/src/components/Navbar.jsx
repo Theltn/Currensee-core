@@ -1,7 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const Navbar = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/auth');
+    } catch (err) {
+      console.error("Failed to log out", err);
+    }
+  };
+
   return (
     <header className="topbar" role="banner" style={{ background: '#0b1117', color: 'white', borderBottom: '1px solid #1a2430' }}>
       <div className="topbar-inner" style={{ display: 'flex', alignItems: 'center', padding: '12px 24px', justifyContent: 'space-between' }}>
@@ -20,8 +35,11 @@ const Navbar = () => {
         </nav>
 
         <div className="right-rail" style={{ display: 'flex', gap: '10px' }}>
-            {/* Auth buttons will change when Firebase is added */}
-            <Link to="/auth" className="ai-btn ai-btn-primary" style={{ padding: '8px 16px', background: '#00b3b3', color: 'black', borderRadius: '8px', textDecoration: 'none' }}>Log In / Sign up</Link>
+            {currentUser ? (
+               <button onClick={handleLogout} className="ai-btn ai-btn-primary" style={{ padding: '8px 16px', background: '#ff5f73', color: 'white', borderRadius: '8px', cursor: 'pointer', border: 'none', fontWeight: 'bold' }}>Log out</button>
+            ) : (
+               <Link to="/auth" className="ai-btn ai-btn-primary" style={{ padding: '8px 16px', background: '#00b3b3', color: 'black', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>Log In / Sign up</Link>
+            )}
         </div>
 
       </div>
