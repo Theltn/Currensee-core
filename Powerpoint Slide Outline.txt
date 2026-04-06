@@ -1,0 +1,169 @@
+Slide 1 — Project Identity
+Include:
+
+Team name
+
+Team members
+
+Project title (clear and specific)
+
+One sentence tagline (example: “StudyBuddy helps students find and book peer tutoring in 2 minutes.”)
+
+ 
+
+Slide 2 — The Problem (≤150 words)
+Write a short, direct description of:
+
+What the app does
+
+Who uses it
+
+Why it matters
+
+What pain it solves
+
+Constraints
+
+Max: 150 words
+
+No buzzword soup (“AI-powered next-gen synergy platform” = immediate eye-roll)
+
+You can reuse the project description from the proposal
+ 
+
+Slide 3 — Target Users & Use Case
+Include:
+
+1–2 target user types (personas)
+
+Their goal and pain point
+
+One realistic use case scenario (“A student needs tutoring before an exam…”)
+
+ 
+
+Slide 4 — Feature List (User Stories)
+Provide 8–12 user stories using this exact format:
+
+“As a user, I want to [action] so that [result].”
+
+Rules:
+
+Must be specific and testable
+
+Avoid vague stories like “As a user, I want a good UI…”
+
+Group stories by role if you have multiple user types (e.g., Student / Tutor / Admin)
+
+Example:
+
+“As a student, I want to book a tutoring session so that I can get help before my quiz.”
+
+“As a tutor, I want to approve or decline session requests so that my schedule stays manageable.”
+
+ 
+
+Slide 5 — UX Snapshot (Wireframes + Flow)
+Show:
+
+1 user flow (3–5 steps)
+
+1–2 rough wireframes (Figma, Excalidraw, sketches are fine)
+
+Minimum expectation:
+
+One core journey: “Sign up → browse → create → confirm”
+
+ 
+
+Slide 6 — Data Model
+Show your core data objects look like.
+
+Include:
+
+4–7 main object classes (example: User, Session, Booking, Review)
+
+Optional: a tiny sample JSON object for one entity
+
+Goal:
+
+Prove you understand what data must exist for the app to work.
+
+ 
+
+Slide 7 — Technical Blueprint: API Plan
+Create a simple table of routes.
+
+Required columns
+
+Method
+
+Route
+
+Purpose
+
+Auth required? (Yes/No)
+
+Example:
+
+Method	Route	Purpose	Auth?
+POST	/auth/register	create user account	No
+POST	/auth/login	login + token	No
+GET	/tutors	list/search tutors	Yes
+POST	/bookings	create booking	Yes
+Rules:
+
+You should have routes for your MVP features
+
+If your app has multiple roles, include how auth changes behavior
+
+ 
+
+Slide 8 — Tech Stack & Architecture
+Include:
+
+Frontend (React, Bootstrap, etc.)
+
+Backend (Node/Express)
+
+Database (MongoDB)
+
+Any APIs or libraries you need (maps, email, payments, etc.)
+
+Simple architecture diagram (boxes + arrows is enough)
+
+Keep it simple:
+React → Express API → MongoDB
+
+ 
+
+Slide 9 — MVP vs Stretch Goals
+Define:
+
+MVP (Must Ship): 3–5 user stories you promise to deliver
+
+Stretch: nice-to-have features if time allows
+
+Rules:
+
+MVP must be realistic for the course timeline
+
+If your MVP is “everything,” your MVP is actually “nothing.”
+
+ 
+
+Slide 10 — Execution Plan + Risks
+Include:
+
+Role assignments for the next sprint/checkpoint
+(and note role rotation if your team is using it)
+
+2–3 milestones with dates/week numbers
+
+Top 3 risks + mitigation
+
+Examples of risks:
+
+“Auth is new to us → Mitigation: implement JWT early + test with Postman.”
+
+“Scope too big → Mitigation: lock MVP this week, stretch only after MVP demo.”

@@ -1,0 +1,19 @@
+Submit a clean, structured document (PDF) including:
+
+
+A) Project Identity
+• Team Name & Members.
+- Theo Helton, David Pope
+• Project Title: (e.g., "StudyBuddy: A Calendly-lite for Peer Tutoring").
+- Currensee
+• The Problem: A 150 words (max) description of what the app does and who would
+use it.
+
+
+B) Feature List (User Stories)
+List exactly what a user can do. Use the format: "As a user, I want to [action] so that [result]."
+• Example: "As a student, I want to delete a completed task, so my list stays organized."
+
+
+C) Technical Blueprint
+• API Plan: A simple table of your routes (e.g., GET /tasks, POST /login).

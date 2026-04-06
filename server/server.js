@@ -16,6 +16,7 @@ const allowedOrigins = [
   process.env.FRONTEND_ORIGIN,             // deployed frontend URL
   process.env.VITE_LOCAL_URL,              // legacy dev value
   'http://localhost:5173',                  // Vite default
+  'http://localhost:5174',                  // Vite fallback port
   'http://127.0.0.1:5501',                  // your current Live Server
   'http://127.0.0.1:5173',                  // another common Vite port
 ].filter(Boolean);
@@ -51,8 +52,8 @@ const stocksRouter = require('./routes/stocks');
 const usersRouter = require('./routes/users');
 const commentsRouter = require('./routes/comments');
 
-const aiRouter = require('./aiRoute.js');   // or './aiRoute.js'
-app.use('/api/ai', aiRouter);          
+const aiRouter = require('./routes/aiRoute.js');
+app.use('/api/ai', aiRouter);
 app.use('/stocks', stocksRouter);
 app.use('/users', usersRouter);
 app.use('/comments', commentsRouter);
@@ -99,6 +100,6 @@ start();
 
 // ---------- Graceful shutdown ----------
 process.on('SIGINT', async () => {
-  try { if (mongoClient) await mongoClient.close(); } catch {}
+  try { if (mongoClient) await mongoClient.close(); } catch { }
   process.exit(0);
 });
