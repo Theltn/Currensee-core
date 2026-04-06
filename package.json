@@ -33,6 +33,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.3.2",
     "firebase-admin": "^13.7.0",
-    "helmet": "^8.1.0"
+    "helmet": "^8.1.0",
+    "yahoo-finance2": "^3.14.0"
   }
 }

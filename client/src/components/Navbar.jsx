@@ -18,28 +18,34 @@ const Navbar = () => {
   };
 
   return (
-    <header className="topbar" role="banner" style={{ background: '#0b1117', color: 'white', borderBottom: '1px solid #1a2430' }}>
-      <div className="topbar-inner" style={{ display: 'flex', alignItems: 'center', padding: '12px 24px', justifyContent: 'space-between' }}>
+    <header className="topbar" role="banner">
+      <div className="topbar-inner">
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <img src="/CurrenseeLogo.png" alt="Currensee Logo" style={{ height: '40px', width: 'auto' }} />
-          <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Currensee</span>
-        </div>
+        <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <img src={`${import.meta.env.BASE_URL}CurrenseeLogo.png`} alt="Currensee Logo" style={{ height: '40px', width: 'auto', borderRadius: '4px' }} />
+          <span style={{ fontWeight: '700', fontSize: '22px', letterSpacing: '-0.5px', background: 'var(--gradient-brand)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Currensee
+          </span>
+        </Link>
 
-        <nav className="row" aria-label="Primary" style={{ display: 'flex', gap: '10px' }}>
-          <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Home</Link>
-          <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }} className="pill">Trading Dashboard</Link>
-          <Link to="/options-center" style={{ color: 'white', textDecoration: 'none' }} className="pill">Options Hub</Link>
-          <Link to="/options-playground" style={{ color: 'white', textDecoration: 'none' }} className="pill">Options Playground</Link>
-          <Link to="/portfolio" style={{ color: 'white', textDecoration: 'none' }} className="pill">Portfolio</Link>
-          <Link to="/ask" style={{ color: 'white', textDecoration: 'none' }} className="pill">Ask Currensee</Link>
+        <nav className="nav-links" aria-label="Primary" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <Link to="/" className="pill" style={{border: 'none', background: 'transparent'}}>Home</Link>
+          <Link to="/dashboard" className="pill">Trading Dashboard</Link>
+          <Link to="/options-center" className="pill">Options Hub</Link>
+          <Link to="/options-playground" className="pill">Options Playground</Link>
+          <Link to="/portfolio" className="pill">Portfolio</Link>
+          <Link to="/ask" className="pill">Ask Currensee</Link>
         </nav>
 
-        <div className="right-rail" style={{ display: 'flex', gap: '10px' }}>
+        <div className="right-rail" style={{ display: 'flex', gap: '12px' }}>
             {currentUser ? (
-               <button onClick={handleLogout} className="ai-btn ai-btn-primary" style={{ padding: '8px 16px', background: '#ff5f73', color: 'white', borderRadius: '8px', cursor: 'pointer', border: 'none', fontWeight: 'bold' }}>Log out</button>
+               <button onClick={handleLogout} className="btn-primary" style={{ background: '#ff5f73', boxShadow: '0 4px 15px rgba(255, 95, 115, 0.3)' }}>
+                 Log out
+               </button>
             ) : (
-               <Link to="/auth" className="ai-btn ai-btn-primary" style={{ padding: '8px 16px', background: '#00b3b3', color: 'black', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>Log In / Sign up</Link>
+               <Link to="/auth" className="btn-primary">
+                 Log In / Sign up
+               </Link>
             )}
         </div>
 

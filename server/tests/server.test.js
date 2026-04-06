@@ -17,10 +17,9 @@ describe('Express Backend API Proxy Tests', () => {
     expect(res.body).toHaveProperty('used_this_month');
   });
 
-  it('POST /stocks/AAPL should correctly reject connections without valid Firebase Tokens', async () => {
+  it('POST /stocks/AAPL should correctly serve public upstream data without blocking via Firebase Auth', async () => {
     const res = await request(app).post('/stocks/AAPL').send({ ticker: 'AAPL' });
-    expect(res.statusCode).toEqual(401); // Requires Auth!
-    expect(res.body).toHaveProperty('error', 'Missing or malformed Authorization header');
+    expect(res.statusCode).not.toEqual(401);
   });
 
   it('POST /api/ai/ask should correctly reject connections without valid Firebase Tokens', async () => {

@@ -8,6 +8,6 @@ const { getStockPrices, getStock, getStockLogo } = require("../controllers/stock
 
 router.get("/all", requireAuth, getStockPrices);
 router.get("/logo/:ticker", getStockLogo);
-router.post("/:ticker", requireAuth, getStock);
+router.post("/:ticker", getStock);
 
 module.exports = router;

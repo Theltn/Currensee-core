@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from '../firebase';
 
 const OptionsPlayground = () => {
   const [ticker, setTicker] = useState('AAPL');
@@ -6,21 +7,42 @@ const OptionsPlayground = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchStockData = () => {
+  const fetchStockData = async () => {
     if (!ticker.trim()) return;
     setLoading(true);
     setError(null);
 
-    // Simulated fetch based on legacy optionsPlayground.html mock
-    setTimeout(() => {
-      const increment = ticker === 'AAPL' ? 5 : 2.5;
-      const base = ticker === 'AAPL' ? 175.43 : Math.random() * 300 + 50;
+    try {
+      let token = '';
+      if (auth.currentUser) {
+        token = await auth.currentUser.getIdToken();
+      }
+
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/stocks/${ticker.toUpperCase()}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ticker: ticker.toUpperCase() })
+      });
+      const data = await res.json();
+
+      if (data.error || !data.tradingData || data.tradingData.length === 0) {
+        setError(data.error || 'Failed to fetch real-time market data.');
+        setLoading(false);
+        return;
+      }
+
+      const livePrice = data.tradingData[data.tradingData.length - 1].c;
+      const increment = livePrice > 100 ? 5 : 2.5;
+      const base = livePrice;
       
       setStockData({
         ticker: ticker.toUpperCase(),
-        name: ticker.toUpperCase() === 'AAPL' ? 'Apple Inc.' : `${ticker.toUpperCase()} Corporation`,
-        price: base,
-        marketCap: 3000000000000,
+        name: data.name || `${ticker.toUpperCase()} Corporation`,
+        price: livePrice,
+        marketCap: data.market_cap || "N/A",
         increment,
         options: [-2, -1, 0, 1, 2].map(i => {
           const strike = Math.round(base / increment) * increment + (i * increment);
@@ -31,8 +53,11 @@ const OptionsPlayground = () => {
           };
         })
       });
+    } catch (err) {
+      setError('Network error while querying backend proxy.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleSearch = (e) => {

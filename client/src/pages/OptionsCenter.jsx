@@ -57,15 +57,41 @@ const OptionsCenter = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '18px' }}>
-        <div style={{ background: '#0f141a', border: '1px solid #1d2a36', borderRadius: '16px', padding: '18px' }}>
+        <div className="card-glass">
           <h3 style={{ margin: '0 0 10px', fontSize: '18px' }}>What is an Option?</h3>
-          <p style={{ margin: 0, color: '#b8c7cc' }}>An option is a contract granting the right, not the obligation, to buy or sell an asset at a specific price.</p>
+          <p style={{ margin: 0, color: '#b8c7cc' }}>An option is a derivative contract granting the right, but not the obligation, to buy or sell the underlying asset at a specified strike price on or before a specified date.</p>
         </div>
-        <div style={{ background: '#0f141a', border: '1px solid #1d2a36', borderRadius: '16px', padding: '18px' }}>
+        <div className="card-glass">
           <h3 style={{ margin: '0 0 10px', fontSize: '18px' }}>American vs. European</h3>
-          <p style={{ margin: 0, color: '#b8c7cc' }}>American-style options can be exercised anytime; European-style only at expiration.</p>
+          <p style={{ margin: 0, color: '#b8c7cc' }}>American-style options can be exercised at any point up to expiration. European-style options can only be exercised strictly on the date of expiration itself.</p>
+        </div>
+        <div className="card-glass">
+          <h3 style={{ margin: '0 0 10px', fontSize: '18px' }}>Intrinsic vs Extrinsic Value</h3>
+          <p style={{ margin: 0, color: '#b8c7cc' }}>Premium consists of Intrinsic (current built-in profit if exercised now) + Extrinsic (time value based on the probability the option moves deeper ITM before expiration).</p>
         </div>
       </div>
+
+      <section style={{ background: '#12161d', border: '1px solid #1d2a36', borderRadius: '16px', padding: '22px' }}>
+        <h2 style={{ marginTop: 0, fontSize: '24px' }}>The Greeks: Pricing Risk</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '18px', marginTop: '16px' }}>
+          <div style={{ background: '#0a0e17', border: '1px solid #1d2a36', borderRadius: '12px', padding: '16px' }}>
+            <h4 style={{ color: 'var(--color-brand-primary)', margin: '0 0 4px 0' }}>Delta (Δ)</h4>
+            <div style={{ fontSize: '13px', color: '#b8c7cc' }}>Measures the expected price change of an option for every $1 move in the underlying stock. Represents approximate probability of expiring ITM.</div>
+          </div>
+          <div style={{ background: '#0a0e17', border: '1px solid #1d2a36', borderRadius: '12px', padding: '16px' }}>
+            <h4 style={{ color: 'var(--color-brand-primary)', margin: '0 0 4px 0' }}>Gamma (Γ)</h4>
+            <div style={{ fontSize: '13px', color: '#b8c7cc' }}>Measures the rate of change in Delta. Highest for At-The-Money options, indicating extreme price sensitivity as the stock moves.</div>
+          </div>
+          <div style={{ background: '#0a0e17', border: '1px solid #1d2a36', borderRadius: '12px', padding: '16px' }}>
+            <h4 style={{ color: '#ef4444', margin: '0 0 4px 0' }}>Theta (Θ)</h4>
+            <div style={{ fontSize: '13px', color: '#b8c7cc' }}>Time decay tracking how much value an option bleeds purely due to the passage of time expiring. Accelerates significantly in the final 30 days.</div>
+          </div>
+          <div style={{ background: '#0a0e17', border: '1px solid #1d2a36', borderRadius: '12px', padding: '16px' }}>
+            <h4 style={{ color: '#f59e0b', margin: '0 0 4px 0' }}>Vega (V)</h4>
+            <div style={{ fontSize: '13px', color: '#b8c7cc' }}>Sensitivity to implied volatility. Surges in option premiums prior to massive uncertainty events (e.g. Earnings calls, Fed data drops).</div>
+          </div>
+        </div>
+      </section>
 
       <section style={{ background: '#12161d', border: '1px solid #1d2a36', borderRadius: '16px', padding: '22px' }}>
         <h2 style={{ marginTop: 0, fontSize: '24px' }}>Quick Strategy Calculator</h2>
