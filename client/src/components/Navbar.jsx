@@ -29,7 +29,8 @@ const Navbar = () => {
         <nav className="row" aria-label="Primary" style={{ display: 'flex', gap: '10px' }}>
           <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Home</Link>
           <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }} className="pill">Trading Dashboard</Link>
-          <Link to="/options" style={{ color: 'white', textDecoration: 'none' }} className="pill">Options Hub</Link>
+          <Link to="/options-center" style={{ color: 'white', textDecoration: 'none' }} className="pill">Options Hub</Link>
+          <Link to="/options-playground" style={{ color: 'white', textDecoration: 'none' }} className="pill">Options Playground</Link>
           <Link to="/portfolio" style={{ color: 'white', textDecoration: 'none' }} className="pill">Portfolio</Link>
           <Link to="/ask" style={{ color: 'white', textDecoration: 'none' }} className="pill">Ask Currensee</Link>
         </nav>
