@@ -67,83 +67,89 @@ const OptionsPlayground = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', color: '#c9d1d9' }}>
+    <div className="page-container">
+      <h1 className="section-heading" style={{ marginBottom: '4px' }}>Options Playground</h1>
+      <p style={{ marginBottom: 'var(--space-lg)', fontSize: '13px' }}>
+        Search a ticker to view simulated near-the-money options chain with live prices.
+      </p>
       
       {/* Search Bar */}
-      <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
+      <div className="options-search-bar fade-in-up">
+        <div style={{ display: 'flex', gap: '10px' }}>
           <input 
             type="text" 
             value={ticker}
             onChange={e => setTicker(e.target.value)}
-            onKeyPress={handleSearch}
-            placeholder="Enter ticker symbol (e.g. AAPL)"
-            style={{ flex: 1, background: '#21262d', border: '1px solid #30363d', color: '#c9d1d9', padding: '10px 14px', borderRadius: '6px' }}
+            onKeyDown={handleSearch}
+            placeholder="Enter ticker (e.g. AAPL)"
+            className="input-modern"
           />
-          <button 
-            onClick={handleSearch}
-            style={{ background: '#238636', color: 'white', border: '1px solid #2ea043', padding: '10px 24px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
-          >
+          <button onClick={handleSearch} className="btn-primary" style={{ flexShrink: 0 }}>
             Search
           </button>
         </div>
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', padding: '40px' }}>Loading options data...</div>
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div className="skeleton" style={{ height: '120px', borderRadius: 'var(--radius-lg)' }} />
+          <div className="skeleton" style={{ height: '250px', borderRadius: 'var(--radius-lg)' }} />
+        </div>
       )}
 
       {error && (
-        <div style={{ background: '#da3633', color: 'white', padding: '14px', borderRadius: '6px', marginBottom: '24px' }}>{error}</div>
+        <div className="alert-error">{error}</div>
       )}
 
       {!loading && !error && stockData && (
         <>
-          <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ margin: '0 0 16px', color: 'white' }}>{stockData.name} ({stockData.ticker})</h2>
-            <div style={{ display: 'flex', gap: '20px' }}>
-              <div style={{ background: 'rgba(48, 54, 61, 0.5)', padding: '16px', borderRadius: '8px', flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#8b949e' }}>Current Price</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3fb950' }}>${stockData.price.toFixed(2)}</div>
+          {/* Stock Overview */}
+          <div className="stock-overview fade-in-up">
+            <h2 style={{ margin: '0 0 14px', fontSize: '18px' }}>{stockData.name} ({stockData.ticker})</h2>
+            <div className="stock-overview-stats">
+              <div className="stat-card">
+                <div className="stat-label">Current Price</div>
+                <div className="stat-value price-up">${stockData.price.toFixed(2)}</div>
               </div>
-              <div style={{ background: 'rgba(48, 54, 61, 0.5)', padding: '16px', borderRadius: '8px', flex: 1 }}>
-                <div style={{ fontSize: '13px', color: '#8b949e' }}>Market Cap</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#c9d1d9' }}>$3.0T</div>
+              <div className="stat-card">
+                <div className="stat-label">Strike Increment</div>
+                <div className="stat-value">${stockData.increment.toFixed(1)}</div>
               </div>
             </div>
           </div>
 
-          <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ padding: '16px', background: 'rgba(48, 54, 61, 0.5)', borderBottom: '1px solid #30363d' }}>
-              <h3 style={{ margin: 0, fontSize: '18px' }}>Options Chain (Near-the-Money)</h3>
+          {/* Options Chain Table */}
+          <div className="options-chain-wrap fade-in-up stagger-2">
+            <div className="options-chain-header">
+              <h3>Options Chain (Near-the-Money)</h3>
             </div>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+              <table className="options-table">
                 <thead>
-                  <tr style={{ background: '#21262d', color: '#8b949e', fontSize: '12px', textTransform: 'uppercase' }}>
-                    <th colSpan={2} style={{ padding: '12px', borderBottom: '1px solid #30363d', borderRight: '1px solid #30363d', color: '#3fb950' }}>Calls</th>
-                    <th style={{ padding: '12px', borderBottom: '1px solid #30363d', color: 'white' }}>Strike</th>
-                    <th colSpan={2} style={{ padding: '12px', borderBottom: '1px solid #30363d', borderLeft: '1px solid #30363d', color: '#f85149' }}>Puts</th>
+                  <tr>
+                    <th colSpan={2} className="call-header" style={{ borderRight: '1px solid var(--border-subtle)' }}>Calls</th>
+                    <th>Strike</th>
+                    <th colSpan={2} className="put-header" style={{ borderLeft: '1px solid var(--border-subtle)' }}>Puts</th>
                   </tr>
-                  <tr style={{ background: '#161b22', color: '#8b949e', fontSize: '12px' }}>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #30363d' }}>Opt Price</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #30363d', borderRight: '1px solid #30363d' }}>Action</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #30363d', color: 'white' }}>$</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #30363d', borderLeft: '1px solid #30363d' }}>Opt Price</th>
-                    <th style={{ padding: '10px', borderBottom: '1px solid #30363d' }}>Action</th>
+                  <tr>
+                    <th>Opt Price</th>
+                    <th style={{ borderRight: '1px solid var(--border-subtle)' }}>Action</th>
+                    <th>$</th>
+                    <th style={{ borderLeft: '1px solid var(--border-subtle)' }}>Opt Price</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stockData.options.map((opt, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #30363d' }}>
-                      <td style={{ padding: '12px', fontWeight: 'bold' }}>${opt.callRef}</td>
-                      <td style={{ padding: '12px', borderRight: '1px solid #30363d' }}>
-                        <button style={{ background: '#238636', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}>Buy Call</button>
+                    <tr key={i}>
+                      <td style={{ fontWeight: 600 }}>${opt.callRef}</td>
+                      <td className="divider">
+                        <button className="btn-trade-call">Buy Call</button>
                       </td>
-                      <td style={{ padding: '12px', fontWeight: 'bold', color: 'white', background: 'rgba(9, 105, 218, 0.1)' }}>${opt.strike}</td>
-                      <td style={{ padding: '12px', borderLeft: '1px solid #30363d', fontWeight: 'bold' }}>${opt.putRef}</td>
-                      <td style={{ padding: '12px' }}>
-                        <button style={{ background: '#da3633', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}>Buy Put</button>
+                      <td className="strike-col">${opt.strike}</td>
+                      <td className="divider-left" style={{ fontWeight: 600 }}>${opt.putRef}</td>
+                      <td>
+                        <button className="btn-trade-put">Buy Put</button>
                       </td>
                     </tr>
                   ))}
@@ -152,6 +158,14 @@ const OptionsPlayground = () => {
             </div>
           </div>
         </>
+      )}
+
+      {!loading && !error && !stockData && (
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <h3>Search for a stock</h3>
+          <p>Enter a ticker symbol above to view its simulated options chain</p>
+        </div>
       )}
 
     </div>

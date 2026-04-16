@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import './styles/tokens.css';
 @import './styles/base.css';
+@import './styles/animations.css';
 @import './styles/topbar.css';
 @import './styles/components.css';
-
-/* Any highly specific local overrides can remain here beneath the imported systems */
+@import './styles/pages.css';

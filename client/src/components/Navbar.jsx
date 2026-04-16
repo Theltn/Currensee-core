@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -7,6 +7,21 @@ import { auth } from '../firebase';
 const Navbar = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Scroll-aware shadow
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -17,40 +32,94 @@ const Navbar = () => {
     }
   };
 
+  const navItems = [
+    { to: '/', label: 'Home' },
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/options-center', label: 'Options Hub' },
+    { to: '/options-playground', label: 'Playground' },
+    { to: '/portfolio', label: 'Portfolio' },
+    { to: '/ask', label: 'Ask AI' },
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
+  // Get user initial for avatar
+  const userInitial = currentUser?.email?.[0]?.toUpperCase() || '?';
+
   return (
-    <header className="topbar" role="banner">
-      <div className="topbar-inner">
-        
-        <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <img src={`${import.meta.env.BASE_URL}CurrenseeLogo.png`} alt="Currensee Logo" style={{ height: '40px', width: 'auto', borderRadius: '4px' }} />
-          <span style={{ fontWeight: '700', fontSize: '22px', letterSpacing: '-0.5px', background: 'var(--gradient-brand)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Currensee
-          </span>
-        </Link>
+    <>
+      <header className={`topbar${scrolled ? ' scrolled' : ''}`} role="banner">
+        <div className="topbar-inner">
+          
+          <Link to="/" className="topbar-logo">
+            <img src={`${import.meta.env.BASE_URL}CurrenseeLogo.png`} alt="Currensee" />
+            <span className="topbar-logo-text">Currensee</span>
+          </Link>
 
-        <nav className="nav-links" aria-label="Primary" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <Link to="/" className="pill" style={{border: 'none', background: 'transparent'}}>Home</Link>
-          <Link to="/dashboard" className="pill">Trading Dashboard</Link>
-          <Link to="/options-center" className="pill">Options Hub</Link>
-          <Link to="/options-playground" className="pill">Options Playground</Link>
-          <Link to="/portfolio" className="pill">Portfolio</Link>
-          <Link to="/ask" className="pill">Ask Currensee</Link>
-        </nav>
+          <nav className="nav-links" aria-label="Primary">
+            {navItems.map(item => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`pill${isActive(item.to) ? ' active' : ''}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
-        <div className="right-rail" style={{ display: 'flex', gap: '12px' }}>
+          <div className="topbar-right">
             {currentUser ? (
-               <button onClick={handleLogout} className="btn-primary" style={{ background: '#ff5f73', boxShadow: '0 4px 15px rgba(255, 95, 115, 0.3)' }}>
-                 Log out
-               </button>
+              <>
+                <div className="user-avatar" title={currentUser.email}>
+                  {userInitial}
+                </div>
+                <button onClick={handleLogout} className="btn-ghost" style={{ padding: '7px 14px', fontSize: '12px' }}>
+                  Log out
+                </button>
+              </>
             ) : (
-               <Link to="/auth" className="btn-primary">
-                 Log In / Sign up
-               </Link>
+              <Link to="/auth" className="btn-primary">
+                Sign In
+              </Link>
             )}
-        </div>
 
-      </div>
-    </header>
+            <button
+              className={`hamburger${mobileOpen ? ' open' : ''}`}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              <span className="hamburger-line" />
+              <span className="hamburger-line" />
+              <span className="hamburger-line" />
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* Mobile drawer */}
+      <nav className={`mobile-nav${mobileOpen ? ' open' : ''}`} aria-label="Mobile navigation">
+        {navItems.map(item => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={`pill${isActive(item.to) ? ' active' : ''}`}
+          >
+            {item.label}
+          </Link>
+        ))}
+        {currentUser ? (
+          <button onClick={handleLogout} className="btn-ghost" style={{ marginTop: '8px' }}>
+            Log out
+          </button>
+        ) : (
+          <Link to="/auth" className="btn-primary" style={{ marginTop: '8px', textAlign: 'center' }}>
+            Sign In
+          </Link>
+        )}
+      </nav>
+    </>
   );
 };
 

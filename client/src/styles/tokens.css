@@ -1,37 +1,72 @@
-/* tokens.css */
+/* ═══════════════════════════════════════════════
+   tokens.css — Currensee Design Tokens
+   Clean Dark Theme · TradingView / Robinhood Inspired
+   ═══════════════════════════════════════════════ */
 :root {
-  /* Premium Dark Mode Colors */
-  --color-bg-primary: #0a0e17;
-  --color-bg-secondary: #121927;
-  --color-bg-glass: rgba(18, 25, 39, 0.7);
-  --color-bg-glass-hover: rgba(30, 41, 59, 0.85);
+  /* ── Background Layers ── */
+  --bg-deepest:     #0b0e11;
+  --bg-primary:     #1a1d24;
+  --bg-secondary:   #1e222d;
+  --bg-elevated:    #262a35;
+  --bg-surface:     #2a2e39;
+  --bg-hover:       #2f3341;
+  --bg-input:       #1e222d;
 
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
+  /* ── Brand Accent (single clean blue) ── */
+  --accent:         #2962ff;
+  --accent-hover:   #1e53e5;
+  --accent-subtle:  rgba(41, 98, 255, 0.10);
+  --accent-muted:   rgba(41, 98, 255, 0.18);
 
-  --color-brand-primary: #00d2ff;
-  --color-brand-secondary: #3a7bd5;
-  --color-accent-success: #10b981;
-  --color-accent-danger: #ef4444;
-  --color-accent-warning: #f59e0b;
+  /* ── Financial Colors ── */
+  --color-gain:     #26a69a;
+  --color-gain-bg:  rgba(38, 166, 154, 0.10);
+  --color-loss:     #ef5350;
+  --color-loss-bg:  rgba(239, 83, 80, 0.10);
+  --color-warning:  #f7931a;
+  --color-warning-bg: rgba(247, 147, 26, 0.10);
 
-  /* Borders & Shadows */
-  --color-border-subtle: rgba(255, 255, 255, 0.08);
-  --color-border-focus: rgba(0, 210, 255, 0.5);
-  
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  /* ── Text ── */
+  --text-primary:   #d1d4dc;
+  --text-secondary: #848e9c;
+  --text-muted:     #5d6673;
+  --text-inverse:   #1a1d24;
+  --text-bright:    #f0f2f5;
 
-  /* Gradients */
-  --gradient-brand: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-secondary) 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  /* ── Borders & Dividers ── */
+  --border-subtle:  #2a2e39;
+  --border-medium:  #363a45;
+  --border-focus:   rgba(41, 98, 255, 0.4);
 
-  /* Transitions */
-  --ts-fast: 0.15s ease-out;
-  --ts-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ── Shadows ── */
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:    0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg:    0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.45);
 
-  /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* ── Radii ── */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-pill: 9999px;
+
+  /* ── Transitions ── */
+  --ts-fast:   0.15s ease;
+  --ts-smooth: 0.25s ease;
+  --ts-spring: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Typography ── */
+  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:  'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* ── Spacing ── */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
 }

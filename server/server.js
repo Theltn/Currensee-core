@@ -23,18 +23,10 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',                  // another common Vite port
 ].filter(Boolean);
 
-// ---------- Security Middleware ----------
-app.use(helmet());
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(apiLimiter);
-
+// ---------- Middleware ----------
 app.use(express.json());
+
+// CORS must come before helmet so preflight OPTIONS requests are handled first
 app.use(
   cors({
     origin: (origin, cb) => {
@@ -45,6 +37,19 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: false,
+}));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(apiLimiter);
 
 // If you really want to render views, uncomment and set a view engine:
 // app.set('view engine', 'ejs'); // and add views/ folder, etc.
@@ -61,8 +66,10 @@ app.get('/', (req, res) => {
 
 const stocksRouter = require('./routes/stocks');
 const aiRouter = require('./routes/aiRoute.js');
+const portfolioRouter = require('./routes/portfolio');
 app.use('/api/ai', aiRouter);
 app.use('/stocks', stocksRouter);
+app.use('/portfolio', portfolioRouter);
 
 // ---------- MongoDB (optional but recommended) ----------
 async function start() {

@@ -1,160 +1,245 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Chart from 'chart.js/auto';
+import { apiFetch } from '../hooks/useApi';
+import { getPortfolio } from '../services/portfolioService';
 
-// Simple mock for initial placeholder, but we map fetch to the robust Node backend in the future
 const Portfolio = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
-  
-  const [data, setData] = useState({
-    account: { equity: 0, cash: 0, totalPL: 0 },
-    holdings: [],
-  });
 
+  const [cash, setCash] = useState(0);
+  const [holdings, setHoldings] = useState([]);
+  const [livePrices, setLivePrices] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Fallback / Initial State for development simulation matching portfolio.html logic
+  // ── 1. Fetch portfolio from Firestore ──
   useEffect(() => {
-    // We would fetch this from /users/getPositions
-    setTimeout(() => {
-      setData({
-        account: { equity: 15450.00, cash: 450.00, totalPL: 5450.00 },
-        holdings: [
-          { ticker: 'AAPL', name: 'Apple Inc.', shares: 50, avgCost: 150, currentPrice: 175, mv: 8750, totPL: 1250, alloc: 58.33 },
-          { ticker: 'GOOGL', name: 'Alphabet', shares: 20, avgCost: 2800, currentPrice: 2900, mv: 5800, totPL: 2000, alloc: 38.66 },
-          { ticker: 'TSLA', name: 'Tesla', shares: 2, avgCost: 200, currentPrice: 225, mv: 450, totPL: 50, alloc: 3.01 }
-        ]
-      });
-      setLoading(false);
-    }, 1000);
+    (async () => {
+      try {
+        const data = await getPortfolio();
+        setCash(data.cash);
+        setHoldings(data.holdings || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
+  // ── 2. Fetch live prices for each holding ──
   useEffect(() => {
-    if (!loading && chartRef.current && data.holdings.length > 0) {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
+    if (holdings.length === 0) return;
 
-      const labels = data.holdings.map(h => h.ticker);
-      const allocData = data.holdings.map(h => h.alloc);
-
-      chartInstance.current = new Chart(chartRef.current, {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{
-            data: allocData,
-            borderWidth: 0,
-            hoverOffset: 4,
-            backgroundColor: [
-              'rgba(0,179,179,.8)', 'rgba(61,168,245,.8)', 'rgba(62,199,167,.8)',
-              'rgba(0,179,179,.55)', 'rgba(61,168,245,.55)'
-            ]
-          }]
-        },
-        options: {
-          plugins: { legend: { display: true, position: 'bottom', labels: { color: '#b8c7cc' } } },
-          cutout: '62%',
+    const fetchPrices = async () => {
+      const prices = {};
+      for (const h of holdings) {
+        try {
+          const res = await apiFetch(`/stocks/${h.ticker}`, {
+            method: 'POST',
+            body: JSON.stringify({ ticker: h.ticker }),
+          });
+          const data = await res.json();
+          if (data.tradingData && data.tradingData.length > 0) {
+            prices[h.ticker] = data.tradingData[data.tradingData.length - 1].c;
+          }
+        } catch (e) {
+          // fall back to avgCost
         }
-      });
-    }
+      }
+      setLivePrices(prices);
+    };
+
+    fetchPrices();
+  }, [holdings]);
+
+  // ── 3. Enrich holdings with live prices ──
+  const enriched = holdings.map(h => {
+    const currentPrice = livePrices[h.ticker] || h.avgCost;
+    const mv = currentPrice * h.shares;
+    const costBasis = h.avgCost * h.shares;
+    const totPL = mv - costBasis;
+    return { ...h, currentPrice, mv, costBasis, totPL };
+  });
+
+  const totalMV = enriched.reduce((s, h) => s + h.mv, 0);
+  const totalPL = enriched.reduce((s, h) => s + h.totPL, 0);
+  const equity = cash + totalMV;
+
+  const withAlloc = enriched.map(h => ({
+    ...h,
+    alloc: totalMV > 0 ? (h.mv / totalMV) * 100 : 0,
+  }));
+
+  // ── 4. Doughnut chart ──
+  useEffect(() => {
+    if (withAlloc.length === 0 || !chartRef.current) return;
+
+    if (chartInstance.current) chartInstance.current.destroy();
+
+    chartInstance.current = new Chart(chartRef.current, {
+      type: 'doughnut',
+      data: {
+        labels: withAlloc.map(h => h.ticker),
+        datasets: [{
+          data: withAlloc.map(h => h.alloc),
+          borderWidth: 0,
+          hoverOffset: 4,
+          backgroundColor: [
+            '#2962ff',
+            '#26a69a',
+            '#ef5350',
+            '#f7931a',
+            '#7b61ff',
+            '#00bcd4',
+            '#ff7043',
+          ],
+        }],
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { color: '#848e9c', padding: 10, font: { size: 11 } },
+          },
+        },
+        cutout: '68%',
+      },
+    });
 
     return () => {
       if (chartInstance.current) chartInstance.current.destroy();
     };
-  }, [loading, data]);
+  }, [withAlloc.length, livePrices]);
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
+  if (loading) {
+    return (
+      <div className="page-container page-container--narrow">
+        <h1 className="section-heading" style={{ marginBottom: '16px' }}>Portfolio</h1>
+        <div className="portfolio-kpi-grid">
+          <div className="skeleton skeleton-card" />
+          <div className="skeleton skeleton-card" />
+          <div className="skeleton skeleton-card" style={{ height: '200px' }} />
+        </div>
+        <div className="skeleton" style={{ height: '300px', marginTop: '16px', borderRadius: 'var(--radius-lg)' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container page-container--narrow">
+        <div className="alert-error">{error}</div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ maxWidth: '1380px', margin: '22px auto 40px', padding: '0 20px', color: '#e6f0f2' }}>
-      
-      {/* Summary KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '14px' }}>
-        <div style={{ gridColumn: 'span 3', background: '#0f141a', border: '1px solid #1d2a36', borderRadius: '16px', padding: '14px', boxShadow: '0 10px 30px rgba(0, 0, 0, .45)' }}>
-          <h4 style={{ margin: '0 0 6px', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '.08em', color: '#b8c7cc' }}>Net Account Value</h4>
-          <div style={{ fontSize: '26px', fontWeight: '800' }}>{loading ? '—' : fmt(data.account.equity)}</div>
-          <div style={{ fontSize: '12px', color: '#b8c7cc' }}>
-            Total P/L: <span style={{ color: data.account.totalPL >= 0 ? '#57d69a' : '#ff5f73' }}>{loading ? '—' : fmt(data.account.totalPL)}</span>
+    <div className="page-container page-container--narrow">
+      <h1 className="section-heading" style={{ marginBottom: '16px' }}>Portfolio</h1>
+
+      {/* KPI Row */}
+      <div className="portfolio-kpi-grid">
+        <div className="kpi-card fade-in-up stagger-1">
+          <div className="kpi-label">Net Account Value</div>
+          <div className="kpi-value">{fmt(equity)}</div>
+          <div className="kpi-sub">
+            Total P/L:{' '}
+            <span className={totalPL >= 0 ? 'price-up' : 'price-down'}>
+              {totalPL >= 0 ? '+' : ''}{fmt(totalPL)}
+            </span>
           </div>
         </div>
 
-        <div style={{ gridColumn: 'span 3', background: '#0f141a', border: '1px solid #1d2a36', borderRadius: '16px', padding: '14px', boxShadow: '0 10px 30px rgba(0, 0, 0, .45)' }}>
-          <h4 style={{ margin: '0 0 6px', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '.08em', color: '#b8c7cc' }}>Cash</h4>
-          <div style={{ fontSize: '26px', fontWeight: '800' }}>{loading ? '—' : fmt(data.account.cash)}</div>
+        <div className="kpi-card fade-in-up stagger-2">
+          <div className="kpi-label">Cash Available</div>
+          <div className="kpi-value">{fmt(cash)}</div>
         </div>
 
-        <div style={{ gridColumn: 'span 6', display: 'flex', flexDirection: 'column', background: '#12161d', border: '1px solid #1d2a36', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0, 0, 0, .45)', overflow: 'hidden' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', padding: '14px 16px', borderBottom: '1px solid #1d2a36', color: '#b8c7cc' }}>Allocation</h3>
-          <div style={{ padding: '10px 14px 14px', display: 'flex', justifyContent: 'center' }}>
-             <div style={{ height: '120px', width: '240px' }}>
+        <div className="allocation-card fade-in-up stagger-3">
+          <div className="allocation-card-header">Allocation</div>
+          <div className="allocation-chart-wrap">
+            {withAlloc.length > 0 ? (
+              <div style={{ height: '130px', width: '260px' }}>
                 <canvas ref={chartRef}></canvas>
-             </div>
+              </div>
+            ) : (
+              <div style={{ padding: '30px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                No holdings yet
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Holdings Grid */}
-      <div style={{ marginTop: '14px' }}>
-        <div style={{ background: '#12161d', border: '1px solid #1d2a36', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0, 0, 0, .45)', overflow: 'hidden' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', padding: '14px 16px', borderBottom: '1px solid #1d2a36', color: '#b8c7cc' }}>Holdings</h3>
-          <div style={{ padding: '10px 14px 14px', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ background: '#0d131a', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '.06em', color: '#b8c7cc' }}>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36' }}>Ticker</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36' }}>Name</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36', textAlign: 'right' }}>Qty</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36', textAlign: 'right' }}>Avg Cost</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36', textAlign: 'right' }}>Price</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36', textAlign: 'right' }}>Market Value</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36', textAlign: 'right' }}>Total P/L</th>
-                  <th style={{ padding: '10px', borderBottom: '1px solid #1d2a36', textAlign: 'right' }}>Alloc %</th>
+      {/* Holdings Table */}
+      <div className="holdings-card fade-in-up stagger-4">
+        <div className="holdings-card-header">Holdings</div>
+        <div className="holdings-table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Name</th>
+                <th className="text-right">Qty</th>
+                <th className="text-right">Avg Cost</th>
+                <th className="text-right">Price</th>
+                <th className="text-right">Market Value</th>
+                <th className="text-right">Total P/L</th>
+                <th className="text-right">Alloc %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {withAlloc.length === 0 ? (
+                <tr>
+                  <td colSpan="8">
+                    <div className="empty-state" style={{ padding: '40px 20px' }}>
+                      <div className="empty-state-icon">💼</div>
+                      <h3>No positions yet</h3>
+                      <p>Start by buying stocks from the Trading Dashboard</p>
+                      <Link to="/dashboard" className="btn-primary" style={{ marginTop: '4px' }}>
+                        Go to Dashboard
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                    <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', color: '#b8c7cc', padding: '20px' }}>Loading Portfolio...</td>
-                    </tr>
-                ) : data.holdings.length === 0 ? (
-                    <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', color: '#b8c7cc', padding: '20px' }}>No positions found</td>
-                    </tr>
-                ) : (
-                  data.holdings.map((h, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #1d2a36', whiteSpace: 'nowrap' }}>
-                      <td style={{ padding: '10px' }}><strong>{h.ticker}</strong></td>
-                      <td style={{ padding: '10px' }}>{h.name}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{h.shares}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(h.avgCost)}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(h.currentPrice)}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(h.mv)}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: h.totPL >= 0 ? '#57d69a' : '#ff5f73' }}>
-                        {h.totPL >= 0 ? '+' : '-'}{fmt(Math.abs(h.totPL))}
-                      </td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{h.alloc.toFixed(1)}%</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-              <tfoot>
-                {data.holdings.length > 0 && !loading && (
-                  <tr style={{ background: '#0d131a' }}>
-                    <th colSpan="5" style={{ padding: '10px', textAlign: 'right' }}>Totals</th>
-                    <th style={{ padding: '10px', textAlign: 'right' }}>{fmt(data.holdings.reduce((sum, h) => sum + h.mv, 0))}</th>
-                    <th style={{ padding: '10px', textAlign: 'right', color: data.account.totalPL >= 0 ? '#57d69a' : '#ff5f73' }}>
-                        {data.account.totalPL >= 0 ? '+' : '-'}{fmt(Math.abs(data.account.totalPL))}
-                    </th>
-                    <th style={{ padding: '10px', textAlign: 'right' }}>100%</th>
+              ) : (
+                withAlloc.map((h, i) => (
+                  <tr key={i}>
+                    <td><strong>{h.ticker}</strong></td>
+                    <td>{h.name}</td>
+                    <td className="text-right">{h.shares}</td>
+                    <td className="text-right">{fmt(h.avgCost)}</td>
+                    <td className="text-right">{fmt(h.currentPrice)}</td>
+                    <td className="text-right">{fmt(h.mv)}</td>
+                    <td className={`text-right ${h.totPL >= 0 ? 'price-up' : 'price-down'}`}>
+                      {h.totPL >= 0 ? '+' : ''}{fmt(h.totPL)}
+                    </td>
+                    <td className="text-right">{h.alloc.toFixed(1)}%</td>
                   </tr>
-                )}
+                ))
+              )}
+            </tbody>
+            {withAlloc.length > 0 && (
+              <tfoot>
+                <tr>
+                  <th colSpan="5" className="text-right">Totals</th>
+                  <th className="text-right">{fmt(totalMV)}</th>
+                  <th className={`text-right ${totalPL >= 0 ? 'price-up' : 'price-down'}`}>
+                    {totalPL >= 0 ? '+' : ''}{fmt(totalPL)}
+                  </th>
+                  <th className="text-right">100%</th>
+                </tr>
               </tfoot>
-            </table>
-          </div>
+            )}
+          </table>
         </div>
       </div>
-
     </div>
   );
 };

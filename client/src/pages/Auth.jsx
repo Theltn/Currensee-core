@@ -2,18 +2,39 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useToast } from '../contexts/ToastContext';
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { addToast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState(''); // Firebase doesn't strictly need username for basic auth but we can capture it
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const from = new URLSearchParams(location.search).get('redirect') || '/';
+
+  // Password strength
+  const getStrength = (pw) => {
+    if (!pw) return { level: 0, label: '', color: '' };
+    let score = 0;
+    if (pw.length >= 6) score++;
+    if (pw.length >= 10) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    
+    if (score <= 1) return { level: 20, label: 'Weak', color: 'var(--color-loss)' };
+    if (score <= 2) return { level: 40, label: 'Fair', color: 'var(--color-warning)' };
+    if (score <= 3) return { level: 60, label: 'Good', color: 'var(--color-warning)' };
+    if (score <= 4) return { level: 80, label: 'Strong', color: 'var(--color-gain)' };
+    return { level: 100, label: 'Very Strong', color: 'var(--color-gain)' };
+  };
+
+  const strength = getStrength(password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,9 +44,10 @@ const Auth = () => {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
+        addToast({ type: 'success', title: 'Welcome back!', message: 'Successfully logged in.' });
       } else {
-        // Here we could also set the displayName in Firebase utilizing updateProfile
         await createUserWithEmailAndPassword(auth, email, password);
+        addToast({ type: 'success', title: 'Account created!', message: 'Welcome to Currensee.' });
       }
       navigate(from, { replace: true });
     } catch (err) {
@@ -37,41 +59,64 @@ const Auth = () => {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px' }}>
-      <section style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(0, 179, 179, .18), rgba(61, 168, 245, .14))', borderRadius: '16px', border: '1px solid #1d2a36', marginBottom: '24px', textAlign: 'center' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: '32px' }}>Join Currensee</h1>
-        <p style={{ margin: 0, color: '#b8c7cc' }}>Log in or sign up to access your Portfolio, Trading Dashboard, and personalized insights.</p>
-        <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-          <button onClick={() => setIsLogin(true)} style={{ background: isLogin ? 'linear-gradient(135deg, #3ec7a7, #3da8f5)' : '#12161d', color: 'white', border: isLogin ? 'none' : '1px solid #1d2a36', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Login</button>
-          <button onClick={() => setIsLogin(false)} style={{ background: !isLogin ? 'linear-gradient(135deg, #57d69a, #7ff0c0)' : '#12161d', color: !isLogin ? '#042217' : 'white', border: !isLogin ? 'none' : '1px solid #1d2a36', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>Create account</button>
+    <div className="auth-wrapper scale-in">
+      <div className="auth-hero">
+        <h1>Welcome to Currensee</h1>
+        <p>Sign in to access your portfolio, trading dashboard, and AI-powered insights.</p>
+        <div className="auth-toggle">
+          <button
+            onClick={() => setIsLogin(true)}
+            className={`auth-toggle-btn ${isLogin ? 'auth-toggle-btn--active' : 'auth-toggle-btn--inactive'}`}
+          >
+            Log In
+          </button>
+          <button
+            onClick={() => setIsLogin(false)}
+            className={`auth-toggle-btn ${!isLogin ? 'auth-toggle-btn--active' : 'auth-toggle-btn--inactive'}`}
+          >
+            Sign Up
+          </button>
         </div>
-      </section>
+      </div>
 
-      {error && <div style={{ padding: '12px', background: 'rgba(255, 95, 115, 0.2)', border: '1px solid #ff5f73', borderRadius: '8px', color: '#ff5f73', marginBottom: '16px' }}>{error}</div>}
+      {error && <div className="alert-error">{error}</div>}
 
-      <div style={{ background: '#12161d', border: '1px solid #1d2a36', borderRadius: '16px', padding: '20px' }}>
-        <h3 style={{ margin: '0 0 16px 0', borderBottom: '1px solid #1d2a36', paddingBottom: '12px', color: '#b8c7cc' }}>{isLogin ? 'Log In' : 'Sign Up'}</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="auth-form-card">
+        <h3>{isLogin ? 'Log In' : 'Create Account'}</h3>
+        <form onSubmit={handleSubmit} className="auth-form">
           
           {!isLogin && (
-            <div>
-              <label style={{ display: 'block', marginBottom: '6px' }}>Username:</label>
-              <input type="text" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#0f141a', border: '1px solid #1d2a36', color: 'white' }} />
+            <div className="auth-field">
+              <label>Username</label>
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)} required className="input-modern" placeholder="Choose a username" />
             </div>
           )}
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px' }}>Email:</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#0f141a', border: '1px solid #1d2a36', color: 'white' }} />
+          <div className="auth-field">
+            <label>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="input-modern" placeholder="your@email.com" />
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px' }}>Password:</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#0f141a', border: '1px solid #1d2a36', color: 'white' }} />
+          <div className="auth-field">
+            <label>Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="input-modern" placeholder={isLogin ? 'Enter password' : 'Create a password'} />
+            {!isLogin && password && (
+              <>
+                <div className="password-strength">
+                  <div
+                    className="password-strength-fill"
+                    style={{ width: `${strength.level}%`, background: strength.color }}
+                  />
+                </div>
+                <div className="password-strength-label" style={{ color: strength.color }}>
+                  {strength.label}
+                </div>
+              </>
+            )}
           </div>
 
-          <button type="submit" disabled={loading} style={{ background: 'linear-gradient(135deg, #57d69a, #7ff0c0)', color: '#042217', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '8px' }}>
-            {loading ? 'Processing...' : 'Submit'}
+          <button type="submit" disabled={loading} className="auth-submit">
+            {loading ? 'Processing...' : (isLogin ? 'Log In' : 'Create Account')}
           </button>
         </form>
       </div>

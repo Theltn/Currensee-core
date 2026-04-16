@@ -1,10 +1,61 @@
 const axios = require("axios");
 
-// Utility: Fetch stock metadata from Polygon
-async function fetchPolygonStockMeta(ticker) {
-  const apiKey = process.env.MASSIVE_API_KEY || process.env.VITE_MASSIVE_API_KEY;
+// ═══════════════════════════════════════
+// In-memory cache to avoid 429 rate limits
+// ═══════════════════════════════════════
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCached(key) {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data;
+  return null;
+}
+
+function setCache(key, data) {
+  cache.set(key, { data, ts: Date.now() });
+}
+
+// Serialize concurrent requests for the same ticker
+const inflightRequests = new Map();
+
+async function dedupedFetch(key, fetchFn) {
+  // Return cached data if fresh
+  const cached = getCached(key);
+  if (cached) return cached;
+
+  // If another request for this key is already in flight, wait for it
+  if (inflightRequests.has(key)) {
+    return inflightRequests.get(key);
+  }
+
+  const promise = fetchFn()
+    .then(data => {
+      setCache(key, data);
+      inflightRequests.delete(key);
+      return data;
+    })
+    .catch(err => {
+      inflightRequests.delete(key);
+      throw err;
+    });
+
+  inflightRequests.set(key, promise);
+  return promise;
+}
+
+// ═══════════════════════════════════════
+// Massive API helpers
+// ═══════════════════════════════════════
+
+function getApiKey() {
+  return process.env.MASSIVE_API_KEY || process.env.VITE_MASSIVE_API_KEY;
+}
+
+async function fetchStockMeta(ticker) {
+  const apiKey = getApiKey();
   const url = `https://api.massive.com/v3/reference/tickers/${ticker}?apiKey=${apiKey}`;
-  const response = await axios.get(url);
+  const response = await axios.get(url, { timeout: 10000 });
   const { results } = response.data;
 
   return {
@@ -16,8 +67,8 @@ async function fetchPolygonStockMeta(ticker) {
   };
 }
 
-async function fetchPolygonQuote(ticker) {
-  const apiKey = process.env.MASSIVE_API_KEY || process.env.VITE_MASSIVE_API_KEY;
+async function fetchStockQuote(ticker) {
+  const apiKey = getApiKey();
   const formatDate = (d) => {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -27,16 +78,18 @@ async function fetchPolygonQuote(ticker) {
   const today = new Date();
   const sixMonthsAgo = new Date(today);
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  const formattedDate = formatDate(today); // YYYY-MM-DD
-  const pastDate = formatDate(sixMonthsAgo); // YYYY-MM-DD
   
-  const url = `https://api.massive.com/v2/aggs/ticker/${ticker}/range/1/day/${pastDate}/${formattedDate}?adjusted=true&sort=asc&limit=200&apiKey=${apiKey}`;
-  const response = await axios.get(url);
+  const url = `https://api.massive.com/v2/aggs/ticker/${ticker}/range/1/day/${formatDate(sixMonthsAgo)}/${formatDate(today)}?adjusted=true&sort=asc&limit=200&apiKey=${apiKey}`;
+  const response = await axios.get(url, { timeout: 10000 });
   return response.data.results || [];
 }
 
+// ═══════════════════════════════════════
+// Route handlers
+// ═══════════════════════════════════════
+
 const getStockLogo = async (req, res) => {
-  const apiKey = process.env.MASSIVE_API_KEY || process.env.VITE_MASSIVE_API_KEY;
+  const apiKey = getApiKey();
   const ticker = (req.params.ticker || "").trim().toUpperCase();
 
   if (!ticker) {
@@ -47,7 +100,7 @@ const getStockLogo = async (req, res) => {
   }
 
   try {
-    const stockMeta = await fetchPolygonStockMeta(ticker);
+    const stockMeta = await dedupedFetch(`meta:${ticker}`, () => fetchStockMeta(ticker));
     if (!stockMeta?.logo) {
       return res.status(404).json({ error: "Logo not found for ticker." });
     }
@@ -72,41 +125,8 @@ const getStockLogo = async (req, res) => {
 };
 
 const getStockPrices = async (req, res) => {
-  // Legacy function that returned all DB entries. Since Mongo is gone, 
-  // return an empty array or a preset array if Dashboards still fetch /all.
   res.json([]); 
 };
-
-// Utility: Generate realistic synthetic fallback arrays when hitting 429s
-function generateMockData(ticker) {
-  const basePrice = ticker === 'AAPL' ? 175 : Math.random() * 200 + 50;
-  const mockCandles = [];
-  let currentPrice = basePrice;
-  const today = new Date();
-  
-  for(let i=199; i>=0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    currentPrice += (Math.random() - 0.48) * 3; 
-    mockCandles.push({
-      c: currentPrice,
-      h: currentPrice + Math.random() * 2,
-      l: currentPrice - Math.random() * 2,
-      o: currentPrice + (Math.random() - 0.5),
-      t: d.getTime(),
-      v: Math.floor(Math.random() * 10000000)
-    });
-  }
-  return {
-    meta: {
-      ticker: ticker,
-      name: `${ticker} Corp (Mock Data - Rate Limited)`,
-      description: 'Simulated data due to backend rate limits.',
-      market_cap: 1000000000000
-    },
-    quotes: mockCandles
-  };
-}
 
 const getStock = async (req, res) => {
   const { ticker } = req.body;
@@ -116,26 +136,23 @@ const getStock = async (req, res) => {
   const upperTicker = ticker.trim().toUpperCase();
 
   try {
-    let meta;
-    let tradingData = [];
-
-    try {
-      meta = await fetchPolygonStockMeta(upperTicker);
-    } catch (err) {
-      console.warn(`[Proxy] Massive API Meta 429 Rate Limit hit for ${upperTicker}, failing over to local simulation.`);
-      meta = generateMockData(upperTicker).meta;
-    }
-    
-    try {
-      tradingData = await fetchPolygonQuote(upperTicker);
-    } catch (err) {
-      console.warn(`[Proxy] Massive API Quote 429 Rate Limit hit for ${upperTicker}, falling back.`);
-      tradingData = generateMockData(upperTicker).quotes;
-    }
+    // Use deduped + cached fetch to avoid 429 rate limits
+    const [meta, tradingData] = await Promise.all([
+      dedupedFetch(`meta:${upperTicker}`, () => fetchStockMeta(upperTicker))
+        .catch(err => {
+          console.warn(`[API] Meta fetch failed for ${upperTicker}: ${err.response?.status || err.message}`);
+          return { ticker: upperTicker, name: upperTicker, description: '', market_cap: null };
+        }),
+      dedupedFetch(`quote:${upperTicker}`, () => fetchStockQuote(upperTicker))
+        .catch(err => {
+          console.warn(`[API] Quote fetch failed for ${upperTicker}: ${err.response?.status || err.message}`);
+          return [];
+        }),
+    ]);
 
     return res.status(200).json({
       ...meta,
-      tradingData
+      tradingData,
     });
   } catch (err) {
     console.error("Backend Proxy error:", err.message);
@@ -144,3 +161,4 @@ const getStock = async (req, res) => {
 };
 
 module.exports = { getStockPrices, getStock, getStockLogo };
+

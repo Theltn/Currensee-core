@@ -1,138 +1,305 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
+import { apiFetch } from '../hooks/useApi';
+import { getPortfolio, executeTrade } from '../services/portfolioService';
+import { useToast } from '../contexts/ToastContext';
 
 const Dashboard = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+  const { addToast } = useToast();
 
-  const [cashBalance, setCashBalance] = useState(10000.00);
   const [search, setSearch] = useState('');
-  const [stock, setStock] = useState({
-    symbol: 'AAPL',
-    name: 'Apple Inc.',
-    price: 150.00,
-    change: 2.50,
-    open: 148.00,
-    volume: '54M',
-    high: 151.00,
-    low: 147.00
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [tradeLoading, setTradeLoading] = useState(false);
+
+  const [stock, setStock] = useState(null);
+  const [chartData, setChartData] = useState(null);
+  const [cashBalance, setCashBalance] = useState(null);
 
   const [orderType, setOrderType] = useState('market');
   const [quantity, setQuantity] = useState(1);
 
+  // ── Load user cash balance on mount ──
   useEffect(() => {
-    if (chartRef.current) {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-      
-      chartInstance.current = new Chart(chartRef.current, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-          datasets: [{
-            label: 'Stock Price',
-            data: [140, 145, 142, 148, 146, 150],
-            borderColor: '#00d4aa',
-            backgroundColor: 'rgba(0, 212, 170, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: { grid: { color: '#2d3748' }, ticks: { color: '#a0aec0' } },
-            y: { grid: { color: '#2d3748' }, ticks: { color: '#a0aec0' } }
-          }
-        }
+    (async () => {
+      try {
+        const data = await getPortfolio();
+        setCashBalance(data.cash);
+      } catch (e) { /* not logged in or first time */ }
+    })();
+  }, []);
+
+  // ── Search for a stock ──
+  const handleSearch = useCallback(async () => {
+    const ticker = search.trim().toUpperCase();
+    if (!ticker) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await apiFetch(`/stocks/${ticker}`, {
+        method: 'POST',
+        body: JSON.stringify({ ticker }),
       });
+
+      const data = await res.json();
+
+      if (!data.tradingData || data.tradingData.length === 0) {
+        setError('No data found for this ticker.');
+        setStock(null);
+        setChartData(null);
+        setLoading(false);
+        return;
+      }
+
+      const td = data.tradingData;
+      const latest = td[td.length - 1];
+      const prev = td.length >= 2 ? td[td.length - 2] : latest;
+      const change = latest.c - prev.c;
+      const changePct = prev.c > 0 ? ((change / prev.c) * 100).toFixed(2) : '0.00';
+
+      setStock({
+        symbol: data.ticker || ticker,
+        name: data.name || ticker,
+        price: latest.c,
+        change,
+        changePct,
+        open: latest.o,
+        high: latest.h,
+        low: latest.l,
+        volume: latest.v,
+      });
+
+      setChartData({
+        labels: td.map(d => new Date(d.t).toLocaleDateString()),
+        prices: td.map(d => d.c),
+      });
+    } catch (err) {
+      setError('Failed to fetch stock data.');
+    } finally {
+      setLoading(false);
     }
+  }, [search]);
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
+  // ── Render chart when data changes ──
+  useEffect(() => {
+    if (!chartData || !chartRef.current) return;
+
+    if (chartInstance.current) chartInstance.current.destroy();
+
+    const isPositive = chartData.prices[chartData.prices.length - 1] >= chartData.prices[0];
+    const color = isPositive ? '#26a69a' : '#ef5350';
+
+    chartInstance.current = new Chart(chartRef.current, {
+      type: 'line',
+      data: {
+        labels: chartData.labels,
+        datasets: [{
+          label: 'Price',
+          data: chartData.prices,
+          borderColor: color,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: color,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            display: true,
+            grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+            ticks: { color: '#5d6673', font: { size: 10 }, maxTicksLimit: 8 },
+            border: { display: false },
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+            ticks: { color: '#5d6673', font: { size: 10 } },
+            border: { display: false },
+          },
+        },
+        interaction: { intersect: false, mode: 'index' },
+      },
+    });
 
     return () => {
       if (chartInstance.current) chartInstance.current.destroy();
     };
-  }, []);
+  }, [chartData]);
+
+  // ── Execute Trade ──
+  const handleTrade = async (type) => {
+    if (!stock) return;
+    setTradeLoading(true);
+
+    try {
+      const result = await executeTrade({
+        ticker: stock.symbol,
+        name: stock.name,
+        type,
+        shares: quantity,
+        pricePerShare: stock.price,
+      });
+
+      addToast({
+        type: 'success',
+        title: `${type} Order Filled`,
+        message: `${quantity} share${quantity > 1 ? 's' : ''} of ${stock.symbol} at $${stock.price.toFixed(2)}`,
+        duration: 5000,
+      });
+      setCashBalance(result.cash);
+    } catch (err) {
+      addToast({
+        type: 'error',
+        title: 'Trade Failed',
+        message: err.message || 'Something went wrong.',
+        duration: 5000,
+      });
+    } finally {
+      setTradeLoading(false);
+    }
+  };
+
+  // ── Format helpers ──
+  const fmtVol = (v) => {
+    if (!v) return '—';
+    if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+    if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+    if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+    return v.toString();
+  };
+
+  const priceClass = (change) => change >= 0 ? 'price-up' : 'price-down';
 
   return (
-    <div className="container-fluid mt-4">
-      <div className="row">
-        
-        {/* Left Column - Search and Chart */}
-        <div className="col-lg-8">
-          <div style={{ background: '#1a1f2e', borderRadius: '8px', padding: '20px', border: '1px solid #2d3748', marginBottom: '20px' }}>
-            <h5 style={{ color: 'white' }}><i className="fas fa-search"></i> Stock Search</h5>
-            <input 
-              type="text" 
-              className="form-control" 
-              placeholder="Search for stocks (e.g., AAPL, GOOGL, TSLA...)" 
+    <div className="page-container">
+      <h1 className="section-heading" style={{ marginBottom: '16px' }}>Trading Dashboard</h1>
+
+      <div className="dashboard-grid">
+
+        {/* Left Column — Search + Chart */}
+        <div className="fade-in-up">
+          <div className="dashboard-search-bar">
+            <input
+              type="text"
+              className="input-modern"
+              placeholder="Search ticker (e.g. AAPL, GOOGL, TSLA)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ background: '#2d3748', border: '1px solid #4a5568', color: 'white' }}
+              onKeyDown={handleKeyPress}
             />
+            <button className="btn-primary" style={{ flexShrink: 0 }} onClick={handleSearch} disabled={loading}>
+              {loading ? 'Searching...' : 'Search'}
+            </button>
           </div>
 
-          <div style={{ background: '#1a1f2e', borderRadius: '8px', padding: '20px', border: '1px solid #2d3748', height: '400px' }}>
+          {error && <div className="alert-error">{error}</div>}
+
+          <div className="dashboard-chart-area">
+            {loading ? (
+              <div className="skeleton" style={{ height: '100%', borderRadius: 'var(--radius-md)' }} />
+            ) : !stock && !loading ? (
+              <div className="chart-error">Search for a ticker to view its chart</div>
+            ) : null}
             <canvas ref={chartRef}></canvas>
           </div>
         </div>
 
-        {/* Right Column - Trading Panel */}
-        <div className="col-lg-4">
-          <div style={{ background: '#1a1f2e', borderRadius: '8px', padding: '20px', border: '1px solid #2d3748', height: '100%' }}>
-            
-            <div style={{ background: '#0f1419', borderRadius: '6px', padding: '15px', marginBottom: '20px', borderLeft: '4px solid #00d4aa' }}>
-              <h4 style={{ color: 'white' }}>{stock.symbol}</h4>
-              <h3 style={{ color: '#00d4aa' }}>${stock.price}</h3>
-              <p style={{ color: '#00d4aa' }}>+{stock.change}</p>
-              
-              <div className="row mt-2" style={{ color: '#a0aec0', fontSize: '0.9em' }}>
-                <div className="col-6">Open: <span style={{ color: 'white' }}>${stock.open}</span></div>
-                <div className="col-6">Volume: <span style={{ color: 'white' }}>{stock.volume}</span></div>
-                <div className="col-6">High: <span style={{ color: 'white' }}>${stock.high}</span></div>
-                <div className="col-6">Low: <span style={{ color: 'white' }}>${stock.low}</span></div>
+        {/* Right Column — Trading Panel */}
+        <div className="trading-panel fade-in-up stagger-2">
+
+          {stock ? (
+            <>
+              <div className="stock-info-header">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 2px', fontSize: '18px' }}>{stock.symbol}</h3>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{stock.name}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className={`price-value ${priceClass(stock.change)}`} style={{ fontSize: '24px' }}>
+                      ${stock.price.toFixed(2)}
+                    </div>
+                    <div className={priceClass(stock.change)} style={{ fontSize: '12px' }}>
+                      {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePct}%)
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stock-meta-grid">
+                  <div>Open: <span>${stock.open.toFixed(2)}</span></div>
+                  <div>Volume: <span>{fmtVol(stock.volume)}</span></div>
+                  <div>High: <span>${stock.high.toFixed(2)}</span></div>
+                  <div>Low: <span>${stock.low.toFixed(2)}</span></div>
+                </div>
               </div>
-            </div>
 
-            <div style={{ background: '#0f1419', borderRadius: '6px', padding: '15px', marginBottom: '20px' }}>
-              <h6 style={{ color: 'white' }}>Account Balance</h6>
-              <h5 style={{ color: 'white' }}>${cashBalance.toFixed(2)}</h5>
-            </div>
+              <div className="kpi-card" style={{ padding: '12px 14px' }}>
+                <div className="kpi-label">Cash Balance</div>
+                <div className="kpi-value" style={{ fontSize: '20px' }}>
+                  {cashBalance !== null ? `$${cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—'}
+                </div>
+              </div>
 
-            <div className="mb-3">
-              <label style={{ color: '#a0aec0' }}>Order Type</label>
-              <select className="form-control" value={orderType} onChange={(e) => setOrderType(e.target.value)} style={{ background: '#2d3748', color: 'white', border: '1px solid #4a5568' }}>
-                <option value="market">Market Order</option>
-                <option value="limit">Limit Order</option>
-              </select>
-            </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>Order Type</label>
+                <select className="select-modern" value={orderType} onChange={(e) => setOrderType(e.target.value)}>
+                  <option value="market">Market Order</option>
+                  <option value="limit">Limit Order</option>
+                </select>
+              </div>
 
-            <div className="mb-3">
-              <label style={{ color: '#a0aec0' }}>Quantity</label>
-              <input type="number" className="form-control" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} min="1" style={{ background: '#2d3748', color: 'white', border: '1px solid #4a5568' }} />
-            </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>Quantity</label>
+                <input type="number" className="input-modern" value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))} min="1" />
+              </div>
 
-            <div style={{ background: '#0f1419', borderRadius: '6px', padding: '15px', marginTop: '15px', color: 'white' }}>
-              <div className="d-flex justify-content-between"><span>Price per share:</span><span>${stock.price}</span></div>
-              <div className="d-flex justify-content-between"><span>Quantity:</span><span>{quantity}</span></div>
-              <hr style={{ borderColor: '#2d3748' }} />
-              <div className="d-flex justify-content-between"><strong style={{ color: 'white' }}>Total Cost:</strong><strong style={{ color: 'white' }}>${(stock.price * quantity).toFixed(2)}</strong></div>
-            </div>
+              <div className="order-summary">
+                <div className="order-row">
+                  <span style={{ color: 'var(--text-secondary)' }}>Price per share</span>
+                  <span className="price-value">${stock.price.toFixed(2)}</span>
+                </div>
+                <div className="order-row">
+                  <span style={{ color: 'var(--text-secondary)' }}>Quantity</span>
+                  <span>{quantity}</span>
+                </div>
+                <hr className="order-divider" />
+                <div className="order-row">
+                  <strong>Estimated Total</strong>
+                  <strong className="price-value">${(stock.price * quantity).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                </div>
+              </div>
 
-            <div className="mt-3" style={{ display: 'flex', gap: '10px' }}>
-              <button style={{ flex: 1, background: '#00d4aa', color: '#001012', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold' }}><i className="fas fa-arrow-up"></i> BUY</button>
-              <button style={{ flex: 1, background: '#ff4757', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold' }}><i className="fas fa-arrow-down"></i> SELL</button>
+              <div className="trade-actions">
+                <button className="btn-success" onClick={() => handleTrade('BUY')} disabled={tradeLoading}>
+                  {tradeLoading ? '...' : 'Buy'}
+                </button>
+                <button className="btn-danger" onClick={() => handleTrade('SELL')} disabled={tradeLoading}>
+                  {tradeLoading ? '...' : 'Sell'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <div className="empty-state-icon">📊</div>
+              <h3>No Stock Selected</h3>
+              <p>Search for a ticker to view details and place trades</p>
             </div>
-
-          </div>
+          )}
         </div>
-
       </div>
     </div>
   );
