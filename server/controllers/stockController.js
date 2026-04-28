@@ -4,7 +4,7 @@ const axios = require("axios");
 // In-memory cache to avoid 429 rate limits
 // ═══════════════════════════════════════
 const cache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes — Massive free tier is ~5 req/min
 
 function getCached(key) {
   const entry = cache.get(key);
@@ -128,6 +128,44 @@ const getStockPrices = async (req, res) => {
   res.json([]); 
 };
 
+// Batch endpoint for ticker tape — fetches multiple tickers in one request
+// with staggered delays to avoid Massive API rate limits
+const getBatchQuotes = async (req, res) => {
+  const { tickers } = req.body;
+  if (!Array.isArray(tickers) || tickers.length === 0) {
+    return res.status(400).json({ error: 'tickers array is required' });
+  }
+
+  const results = [];
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+  for (const raw of tickers.slice(0, 15)) {
+    const t = raw.trim().toUpperCase();
+    try {
+      // Check if already cached (no upstream call needed)
+      const wasCached = !!getCached(`quote:${t}`);
+      const tradingData = await dedupedFetch(`quote:${t}`, () => fetchStockQuote(t));
+      if (tradingData && tradingData.length >= 2) {
+        const latest = tradingData[tradingData.length - 1].c;
+        const prev = tradingData[tradingData.length - 2].c;
+        results.push({
+          symbol: t,
+          price: latest,
+          change: ((latest - prev) / prev) * 100,
+        });
+      }
+      // Only delay if we actually hit the upstream API
+      if (!wasCached) await delay(1200);
+    } catch (err) {
+      console.warn(`[Batch] Skipping ${t}: ${err.message}`);
+      // Delay even on error to avoid hammering the upstream
+      await delay(1200);
+    }
+  }
+
+  res.json(results);
+};
+
 const getStock = async (req, res) => {
   const { ticker } = req.body;
   if (!ticker) {
@@ -160,5 +198,5 @@ const getStock = async (req, res) => {
   }
 };
 
-module.exports = { getStockPrices, getStock, getStockLogo };
+module.exports = { getStockPrices, getStock, getStockLogo, getBatchQuotes };
 
