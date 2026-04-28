@@ -1,0 +1,227 @@
+The purpose of the final capstone project is to demonstrate your team’s ability to design, implement, and document a working multi-tier web application that integrates a frontend interface, a backend server, and a persistent MongoDB database. Your final submission will be evaluated based on the original course-level project requirements, the MVPs proposed and approved by your team and then instructor, the technical quality of the implementation, the completeness of the submission, and the evidence of collaboration. The original project proposal guidelines established expectations related to user accounts, persistence, validation, responsive design, documentation, and contribution history, while your team’s approved proposal defined the specific MVPs that your project was expected to implement.
+
+1. Minimum Project Requirements
+Every final project must include all the following:
+
+User Accounts: Register, Login, and Logout
+Authentication and Authorization: Protected routes and protected actions must require valid authentication, and users must only be able to perform actions for which they have appropriate authorization
+Full MVP Implementation: All approved MVPs must be fully implemented and integrated into the application
+Comprehensive CRUD Across MVPs: Core MVP features must support the full set of meaningful data operations they require. If an MVP logically involves creating, viewing, editing, managing, or removing data, those operations should be supported as appropriate
+Data Persistence: Core application data must be stored in MongoDB and must remain available after page refresh and server restart
+Form Validation: Invalid or incomplete input must be handled appropriately with clear and helpful feedback
+Responsive Layout: The application must be usable on both laptop and mobile screen sizes
+Full-Stack Integration: The frontend, backend, routes, and database must work together as one functioning system
+In addition to these course-level requirements, each team is responsible for completing the specific MVPs promised in its approved proposal.
+
+2. What to Submit
+Each team member must submit their independent response. Submit all the following in Canvas:
+
+GitHub repository link containing all the source code and artifacts
+Make sure you do NOT include “node_modules” folder
+Demo video link (must be accessible without asking for permission)
+README.md
+The repository and demo video must still allow the project to be evaluated clearly and fairly.
+
+3. README Requirements
+Your repository must include a complete README.md containing all the following:
+
+Project title
+200-word abstract
+You may reuse the midterm abstract if there have been no major changes
+Team member names
+Video link
+Technologies used
+Setup and run instructions
+Configuration notes required to run the project
+Test credentials for authenticated users
+List of completed MVPs
+List of any stretch features
+Comprehensive REST API documentation that includes
+API path
+HTTP method
+purpose of the endpoint
+required input parameters or request body
+example request
+example response
+authentication/authorization requirement (if applicable)
+possible error responses/status codes
+Your README should enable the grader to understand:
+
+the purpose of the project
+how to run it
+how to log in or test it
+which features are expected to function
+API documentation
+The original project guideline explicitly required documentation that clearly explains how to start and evaluate the application; therefore, incomplete or unclear documentation will affect the submission grade.
+
+4. Collaboration Requirements
+Your team must follow the workflow below:
+
+A public GitHub repository must be created by the team lead
+Each team member must work on their own branch
+Each team member must contribute code
+The team lead merges approved work into main
+Repository history will be considered part of the submission evidence. This includes:
+
+commit history
+branch activity
+merge activity
+visible distribution of work across the team
+The original course expectations also remain in effect: commit regularly, ensure that your work is explainable, and do not rely on code that team members cannot understand or justify.
+
+5. Technical Expectations
+A feature counts as complete only if it is:
+
+implemented
+integrated into the actual application
+testable
+functioning during grading
+connected to the backend and database where appropriate
+supported by the full set of operations expected for that MVP workflow
+A feature does not count as complete if it is:
+
+partially implemented
+hardcoded in the frontend
+present only in comments, stubs, or unfinished files
+nonfunctional during testing
+demonstrated only through a very limited scripted path
+replaced by an unrelated stretch feature
+Clarification on authentication and authorization
+It is not sufficient to hide buttons or menu items in the user interface. If a user is not permitted to perform an action, the server must also reject that request. Access control must be enforced on the backend, not only represented in the interface.
+
+Clarification on comprehensive CRUD
+For the final submission, it is not sufficient to demonstrate one example of CRUD while leaving the rest of the MVPs only partially implemented. Approved MVPs should function as complete application features. If an MVP involves managing listings, users, tasks, orders, messages, or similar data, the appropriate operations for that workflow should be present and functional.
+
+Clarification on persistence
+Using in-memory arrays or temporary storage for a core workflow does not satisfy the persistence requirement. If data does not remain available after refresh or server restart, the project does not meet the expected standard.
+
+Clarification on stretch goals
+Stretch goals are welcome, but they do not replace missing core requirements. Additional polish or extra features do not compensate for missing persistence, incomplete access control, or partially implemented MVPs.
+
+6. Grading Rubric (100 points)
+1) Completed ALL MVPs: 35 points
+
+This is the most important category.
+
+To earn full credit, the project must fully implement:
+
+all course-required project features
+all proposal-promised MVP features
+comprehensive CRUD functionality across the project’s core MVP workflows where applicable
+all core workflows in a working, integrated state
+Examples of major point loss in this category include:
+
+missing Register, Login, or Logout
+missing or incomplete authorization
+MVPs that are only partially implemented
+workflows that allow viewing but not managing data where management is clearly expected
+promised MVPs that appear in the interface but are not actually functional
+data that does not persist
+features that work only within a very narrow demonstration path
+2) Full-Stack Integration and Technical Correctness: 20 points
+
+The project should function as a coherent full-stack application rather than as disconnected components.
+
+To earn full credit, the application should demonstrate:
+
+meaningful frontend integration
+functional backend routes
+proper request/response handling
+correct backend/database interaction
+reliable feature behavior under normal use
+Examples of point loss in this category include:
+
+routes exist but are not correctly connected to the interface
+API calls fail or behave inconsistently
+database operations do not align with the expected workflow
+standard user actions cause failures in the system
+3) Data Persistence and Data Model Quality: 10 points
+
+To earn full credit:
+
+important data is stored in MongoDB or similar
+saved data persists after page refresh
+saved data persists after server restart
+collections and stored fields are appropriate for the application
+Examples of point loss in this category include:
+
+in-memory storage used for core features
+saved data disappears
+poor data organization interferes with workflows
+4) Validation, Error Handling, Authentication, and Authorization: 10 points
+
+To earn full credit:
+
+required fields are validated
+invalid input is handled appropriately
+helpful error messages are provided
+login/logout behavior works correctly
+protected routes and actions require authentication
+users cannot modify or manage data they do not control
+Examples of point loss in this category include:
+
+blank or invalid forms cause application errors
+no meaningful user feedback is provided
+unauthorized users can access protected functionality
+authorization is represented only in the interface and not enforced on the server
+5) User Experience and Responsive Design: 10 points
+
+To earn full credit:
+
+the application is understandable and usable
+major workflows are reasonably easy to follow
+the interface functions on both laptop and mobile screen sizes
+design decisions support the purpose of the application
+Examples of point loss in this category include:
+
+broken layout on smaller screens
+confusing navigation
+usability problems that interfere with core workflows
+6) Code Quality and Repository Professionalism: 5 points
+
+To earn full credit:
+
+code is readable and reasonably organized
+naming and structure are clear
+repository contents are professional and complete
+team members can explain the code they wrote
+Examples of point loss in this category include:
+
+poor organization
+missing files
+confusing structure
+code used without adequate understanding
+7) Documentation and Submission Completeness: 10 points
+
+To earn full credit:
+
+all required materials are submitted
+the README is complete and accurate and must include the API documentations
+setup instructions are usable
+configuration notes are clear
+graders can run and evaluate the project without unnecessary assumptions
+Examples of point loss in this category include:
+
+incomplete README
+missing credentials or setup details
+unclear instructions
+missing required submission components
+7. Individual Contribution Adjustment
+This project is submitted as a team project, but contribution can still affect an individual grade.
+
+A team member who barely contributed: –25 points applied to that member only
+Evidence may include:
+
+commit history
+branch activity
+merge activity
+visible ownership of work
+ability to explain implementation decisions
+This is an individual penalty, not a team-wide penalty.
+
+8. Important Notes
+Depth is better than breadth. A smaller system that works correctly from interface to database is stronger than a larger system with multiple incomplete features. This principle is consistent with the original project design guidance.
+A polished interface does not compensate for missing backend functionality, missing persistence, broken authentication, or weak authorization.
+Your team should be able to explain the architecture, the data flow, and the code that was submitted.
+If the grader cannot reasonably run the project based on the documentation provided, that is a submission issue.
+If a promised MVP is missing, it will affect the grade even if stretch features have been added.
