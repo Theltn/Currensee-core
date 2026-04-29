@@ -1,56 +1,25 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState } from 'react';
 
-const TICKERS = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'SPY', 'INTC', 'NFLX'];
-const CACHE_KEY = 'currensee_ticker_cache_v3';
-const CACHE_TTL = 60 * 1000; // 1 minute
 const SCROLL_COPIES = 4; // enough copies for seamless loop on any screen
 
+// ─── STATIC FALLBACK DATA ───────────────────────────────────────────
+// Live API calls are DISABLED to preserve Massive API quota for
+// trading dashboard searches. Re-enable by restoring the fetch logic.
+const STATIC_DATA = [
+  { symbol: 'AAPL',  price: 213.25, change:  0.74 },
+  { symbol: 'GOOGL', price: 176.82, change:  1.12 },
+  { symbol: 'MSFT',  price: 430.16, change: -0.38 },
+  { symbol: 'AMZN',  price: 191.70, change:  0.55 },
+  { symbol: 'TSLA',  price: 172.43, change: -1.25 },
+  { symbol: 'META',  price: 510.92, change:  0.89 },
+  { symbol: 'NVDA',  price: 875.30, change:  2.31 },
+  { symbol: 'SPY',   price: 538.60, change:  0.42 },
+  { symbol: 'INTC',  price:  31.05, change: -0.67 },
+  { symbol: 'NFLX',  price: 628.14, change:  1.53 },
+];
+
 const TickerTape = () => {
-  const [data, setData] = useState([]);
-  const fetchedRef = useRef(false);
-
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    // Check cache first
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp < CACHE_TTL) {
-          setData(parsed.data);
-          return;
-        }
-      } catch (e) { /* ignore bad cache */ }
-    }
-
-    // Fetch all prices in one batch request
-    const fetchPrices = async () => {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
-      try {
-        const res = await fetch(`${backendUrl}/stocks/batch`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tickers: TICKERS }),
-        });
-        if (!res.ok) return;
-        const results = await res.json();
-
-        if (results.length > 0) {
-          setData(results);
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            timestamp: Date.now(),
-            data: results,
-          }));
-        }
-      } catch (e) {
-        console.warn('TickerTape fetch failed:', e.message);
-      }
-    };
-
-    fetchPrices();
-  }, []);
+  const [data] = useState(STATIC_DATA);
 
   if (data.length === 0) return null;
 
