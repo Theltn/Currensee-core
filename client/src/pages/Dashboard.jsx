@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
 import { apiFetch } from '../hooks/useApi';
-import { getPortfolio, executeTrade } from '../services/portfolioService';
 import { useToast } from '../contexts/ToastContext';
 
 const Dashboard = () => {
@@ -21,12 +20,15 @@ const Dashboard = () => {
   const [orderType, setOrderType] = useState('market');
   const [quantity, setQuantity] = useState(1);
 
-  // ── Load user cash balance on mount ──
+  // ── Load user cash balance on mount (via backend) ──
   useEffect(() => {
     (async () => {
       try {
-        const data = await getPortfolio();
-        setCashBalance(data.cash);
+        const res = await apiFetch('/portfolio');
+        if (res.ok) {
+          const data = await res.json();
+          setCashBalance(data.cash);
+        }
       } catch (e) { /* not logged in or first time */ }
     })();
   }, []);
@@ -140,19 +142,28 @@ const Dashboard = () => {
     };
   }, [chartData]);
 
-  // ── Execute Trade ──
+  // ── Execute Trade (via backend) ──
   const handleTrade = async (type) => {
     if (!stock) return;
     setTradeLoading(true);
 
     try {
-      const result = await executeTrade({
-        ticker: stock.symbol,
-        name: stock.name,
-        type,
-        shares: quantity,
-        pricePerShare: stock.price,
+      const res = await apiFetch('/portfolio/trade', {
+        method: 'POST',
+        body: JSON.stringify({
+          ticker: stock.symbol,
+          name: stock.name,
+          type,
+          shares: quantity,
+          pricePerShare: stock.price,
+        }),
       });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'Trade failed.');
+      }
 
       addToast({
         type: 'success',
