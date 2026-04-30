@@ -17,7 +17,7 @@
 | **AI Assistant** | ✅ Working | GPT-4o-mini via OpenAI Responses API, rate-limited |
 | **Options Education** | ✅ Working | Knowledge Hub + Strategy Calculator + FAQ |
 | **Options Playground** | ✅ Working | Simulated near-the-money options chain |
-| **Comments & Community** | ❌ **Missing** | Proposed MVP — no implementation exists |
+
 | **Data Persistence** | ✅ Confirmed | Firestore accepted as "MongoDB or similar" — no migration needed |
 | **Form Validation** | ⚠️ Partial | Auth has password strength; trading has basic checks; no comprehensive client-side validation with helpful error messages |
 | **Responsive Design** | ⚠️ Partial | Mobile navbar exists; pages need audit for smaller screens |
@@ -29,13 +29,11 @@
 ## Critical Gaps to Address (Rubric Risk)
 
 > [!CAUTION]
-> **These 4 issues could cause major point loss if not addressed:**
+> **These 3 issues could cause major point loss if not addressed:**
 
-1. **Comments & Community MVP** — Listed in the approved proposal but **zero code exists**. This is a promised MVP and will directly cost points.
+1. **Backend-Enforced Authorization** — The rubric explicitly states: *"If a user is not permitted to perform an action, the server must also reject that request."* Currently, portfolio trades go through the **client-side** `portfolioService.js` directly to Firestore, not through the Express server. The server-side `portfolioController.js` exists but the Dashboard doesn't call it. All data mutations must go through the backend.
 
-2. **Backend-Enforced Authorization** — The rubric explicitly states: *"If a user is not permitted to perform an action, the server must also reject that request."* Currently, portfolio trades go through the **client-side** `portfolioService.js` directly to Firestore, not through the Express server. The server-side `portfolioController.js` exists but the Dashboard doesn't call it. All data mutations must go through the backend.
-
-3. **README / API Documentation** — The rubric allocates 10 points for documentation. The current README is minimal — missing abstract, team names, test credentials, MVP checklist, and **comprehensive API documentation** (paths, methods, request/response examples, error codes).
+2. **README / API Documentation** — The rubric allocates 10 points for documentation. The current README is minimal — missing abstract, team names, test credentials, MVP checklist, and **comprehensive API documentation** (paths, methods, request/response examples, error codes).
 
 ---
 
@@ -52,11 +50,11 @@
 
 4. **Deployment:** Is the Render backend still active? Is the GitHub Pages frontend current? Graders need to be able to run the project.
 
-5. **Username field:** The Sign Up form collects `username` but it's never stored or used. Should usernames be persisted and displayed in comments?
+5. **Username field:** The Sign Up form collects `username` but it's never stored or used. Should it be persisted?
 
 ---
 
-## Proposed Changes — 5 Phases
+## Proposed Changes — 4 Phases
 
 ---
 
@@ -85,49 +83,7 @@
 
 ---
 
-### Phase 2: Comments & Community MVP
-
-> This is a **promised MVP** from the proposal. Missing it will cost significant points under "Completed ALL MVPs" (35 pts).
-
-#### [NEW] [server/controllers/commentController.js](file:///Users/theoh/Documents/Development/Investor%20App/server/controllers/commentController.js)
-- `createComment(req, res)` — Create a comment linked to a ticker + user
-- `getComments(req, res)` — Get all comments for a ticker (paginated)
-- `updateComment(req, res)` — Edit comment (only by owner — `req.user.uid === comment.userId`)
-- `deleteComment(req, res)` — Delete comment (only by owner)
-- Store: `{ _id, ticker, userId, userEmail, text, createdAt, updatedAt }`
-
-#### [NEW] [server/routes/comments.js](file:///Users/theoh/Documents/Development/Investor%20App/server/routes/comments.js)
-```
-POST   /comments/          → createComment    (requireAuth)
-GET    /comments/:ticker   → getComments      (public or requireAuth)
-PATCH  /comments/:id       → updateComment    (requireAuth + owner check)
-DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
-```
-
-#### [MODIFY] [server.js](file:///Users/theoh/Documents/Development/Investor%20App/server/server.js)
-- Mount comments router: `app.use('/comments', commentsRouter)`
-
-#### [NEW] [client/src/pages/StockComments.jsx](file:///Users/theoh/Documents/Development/Investor%20App/client/src/pages/StockComments.jsx) *(or integrate into Dashboard)*
-- Comment list with user email/name, timestamp, text
-- "Add Comment" form (textarea + submit)
-- Edit/Delete buttons visible only for own comments
-- Inline edit mode
-
-#### [MODIFY] [Dashboard.jsx](file:///Users/theoh/Documents/Development/Investor%20App/client/src/pages/Dashboard.jsx)
-- Add a "Comments" section below the chart when a stock is selected
-- Fetch comments via `apiFetch('/comments/AAPL')`
-- Allow posting, editing, deleting comments for the viewed ticker
-
-#### Server-side authorization enforcement
-- `updateComment`: Verify `req.user.uid === comment.userId` before allowing edit
-- `deleteComment`: Verify `req.user.uid === comment.userId` before allowing delete
-- Return 403 Forbidden if unauthorized
-
-**Acceptance:** User can post comments on any stock page, edit/delete their own, see others' comments. Server rejects edit/delete attempts on comments owned by other users. Comments persist across refresh/restart.
-
----
-
-### Phase 3: Form Validation & Error Handling
+### Phase 2: Form Validation & Error Handling
 
 > Rubric: "required fields are validated, invalid input is handled appropriately, helpful error messages are provided" (10 pts)
 
@@ -151,10 +107,6 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 - Validate request body for `/portfolio/trade`: ticker, type, shares (positive int), pricePerShare (positive float)
 - Return 400 with specific error messages
 
-#### [NEW] [server/validators/commentValidator.js](file:///Users/theoh/Documents/Development/Investor%20App/server/validators/commentValidator.js)
-- Validate comment text: non-empty, max length (500 chars)
-- Validate ticker format
-
 #### [MODIFY] [AskAI.jsx](file:///Users/theoh/Documents/Development/Investor%20App/client/src/pages/AskAI.jsx)
 - **Fix auth issue**: Currently does NOT send the Firebase token in the `Authorization` header — only uses `credentials: 'include'`. The `/api/ai/ask` route requires `requireAuth`. This means **Ask AI is broken for authenticated users** unless cookies happen to work.
 - Use `apiFetch()` instead of raw `fetch()` to ensure the Bearer token is sent.
@@ -163,7 +115,7 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 
 ---
 
-### Phase 4: Responsive Design Audit & Polish
+### Phase 3: Responsive Design Audit & Polish
 
 > Rubric: "the interface functions on both laptop and mobile screen sizes" (10 pts)
 
@@ -191,7 +143,7 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 
 ---
 
-### Phase 5: README & Documentation Overhaul
+### Phase 4: README & Documentation Overhaul
 
 > Rubric: 10 points for documentation — "the README is complete and accurate and **must include API documentation**"
 
@@ -235,7 +187,6 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 - [x] Stock Market Data (Search, Charts, Ticker Tape)
 - [x] Paper Trading (Buy/Sell with virtual $100K)
 - [x] Portfolio Management (Holdings, Allocation, P/L)
-- [x] Comments & Community
 - [x] AI Financial Assistant
 - [x] Options Education Hub
 - [x] Options Playground
@@ -283,10 +234,6 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 7. `GET /portfolio/transactions` — Get transaction history
 8. `POST /api/ai/ask` — Ask AI assistant
 9. `GET /api/ai/health` — AI health check
-10. `POST /comments/` — Create comment
-11. `GET /comments/:ticker` — Get comments for stock
-12. `PATCH /comments/:id` — Edit comment
-13. `DELETE /comments/:id` — Delete comment
 
 **Acceptance:** A grader can clone the repo, follow the README, start the app, log in with test credentials, and test all features without any confusion.
 
@@ -298,7 +245,6 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 - Run `npm test` (existing Jest suite)
 - Verify all backend routes respond correctly using manual curl/Postman testing
 - Test auth: 401 on protected routes without token
-- Test authorization: 403 when editing/deleting another user's comment
 
 ### Manual Verification (Browser)
 1. **Register** → new account created, redirected to home
@@ -306,7 +252,7 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 3. **Logout** → returns to auth page, protected routes redirect
 4. **Dashboard** → search stock, view chart, buy shares, sell shares
 5. **Portfolio** → see holdings, allocation chart, P/L calculations, data persists on refresh
-6. **Comments** → post comment, edit own comment, delete own comment, cannot edit others'
+
 7. **Ask AI** → send question, receive answer, rate limit works
 8. **Options** → calculator works, playground loads simulated chain
 9. **Mobile** → test all above flows on 375px viewport
@@ -335,11 +281,11 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 12. **E2E Testing** — Playwright or Cypress tests for critical flows (register → trade → view portfolio)
 
 ### UX Polish
-13. **Confirmation Modals** — "Are you sure?" modal before executing trades or deleting comments
+13. **Confirmation Modals** — "Are you sure?" modal before executing trades
 14. **Onboarding Tour** — First-time user walkthrough highlighting key features
 15. **Keyboard Shortcuts** — `Ctrl+K` to focus search, `Escape` to close modals
 16. **Toast Notification for Errors** — Replace alert-style errors with toast notifications consistently
-17. **Pagination** — Paginate comments list and transaction history for scalability
+17. **Pagination** — Paginate transaction history for scalability
 
 ---
 
@@ -348,11 +294,10 @@ DELETE /comments/:id       → deleteComment    (requireAuth + owner check)
 | Phase | Focus | Est. Effort | Rubric Points at Risk |
 |-------|-------|-------------|----------------------|
 | **1** | Backend-Enforced Authorization | 2-3 hrs | 10 pts (Auth/Authz) + 20 pts (Full-Stack) |
-| **2** | Comments & Community MVP | 4-5 hrs | 35 pts (MVPs) |
-| **3** | Form Validation & Error Handling | 2-3 hrs | 10 pts (Validation) |
-| **4** | Responsive Design Audit | 2-3 hrs | 10 pts (UX/Responsive) |
-| **5** | README & API Docs | 2-3 hrs | 10 pts (Documentation) |
-| | **Total** | **13-17 hrs** | **Up to 85 pts at risk** |
+| **2** | Form Validation & Error Handling | 2-3 hrs | 10 pts (Validation) |
+| **3** | Responsive Design Audit | 2-3 hrs | 10 pts (UX/Responsive) |
+| **4** | README & API Docs | 2-3 hrs | 10 pts (Documentation) |
+| | **Total** | **9-12 hrs** | **Up to 50 pts at risk** |
 
 > [!IMPORTANT]
-> **Priority order matters.** Phase 1 and Phase 2 protect the most rubric points. Phase 5 is the easiest quick win. Recommended order: **1 → 2 → 5 → 3 → 4**.
+> **Priority order matters.** Phase 1 protects the most rubric points. Phase 4 is the easiest quick win. Recommended order: **1 → 4 → 2 → 3**.

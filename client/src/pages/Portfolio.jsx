@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'chart.js/auto';
 import { apiFetch } from '../hooks/useApi';
-import { getPortfolio } from '../services/portfolioService';
 
 const Portfolio = () => {
   const chartRef = useRef(null);
@@ -14,11 +13,16 @@ const Portfolio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // ── 1. Fetch portfolio from Firestore ──
+  // ── 1. Fetch portfolio from backend ──
   useEffect(() => {
     (async () => {
       try {
-        const data = await getPortfolio();
+        const res = await apiFetch('/portfolio');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server error (${res.status})`);
+        }
+        const data = await res.json();
         setCash(data.cash);
         setHoldings(data.holdings || []);
       } catch (err) {
