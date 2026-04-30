@@ -564,6 +564,19 @@
   font-weight: 500;
 }
 
+/* ── Inline Field Validation Errors ── */
+.field-error {
+  color: var(--color-loss);
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.input-error {
+  border-color: var(--color-loss) !important;
+  box-shadow: 0 0 0 1px var(--color-loss);
+}
+
 /* ── AskAI ── */
 .ask-header {
   display: flex;
