@@ -698,13 +698,15 @@
 }
 
 /* ── Responsive ── */
+
+/* ── Tablet (≤ 1024px) ── */
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
 
   .portfolio-kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .stock-overview-stats {
@@ -718,11 +720,20 @@
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .calculator-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
+/* ── Mobile (≤ 768px) ── */
 @media (max-width: 768px) {
   .dashboard-search-bar {
     flex-direction: column;
+  }
+
+  .dashboard-chart-area {
+    height: 280px;
   }
 
   .trade-actions {
@@ -731,5 +742,129 @@
 
   .stats-row {
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* Portfolio — stack KPIs and make table scrollable */
+  .portfolio-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .holdings-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .holdings-table-wrap .data-table {
+    min-width: 560px;
+  }
+
+  /* Options Playground — scrollable chain table */
+  .options-chain-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .options-table {
+    min-width: 650px;
+  }
+
+  /* Options Center — stack calculator */
+  .calculator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-banner {
+    padding: var(--space-lg);
+  }
+
+  .hero-banner h1 {
+    font-size: 1.3rem;
+  }
+
+  /* AskAI — full width chat */
+  .page-container--chat {
+    padding: var(--space-md);
+  }
+
+  .chat-container {
+    min-height: 50vh;
+  }
+
+  .chat-bubble {
+    max-width: 90%;
+  }
+
+  .ask-input-bar {
+    gap: 6px;
+  }
+
+  .suggestion-chips {
+    flex-wrap: wrap;
+  }
+
+  /* Auth — tighter padding */
+  .auth-wrapper {
+    padding: 0 var(--space-md);
+    margin-top: var(--space-lg);
+  }
+
+  /* Options search */
+  .options-search-bar {
+    padding: var(--space-md);
+  }
+
+  .stock-overview {
+    padding: var(--space-md);
+  }
+}
+
+/* ── Small mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  .dashboard-chart-area {
+    height: 220px;
+    padding: var(--space-md);
+  }
+
+  .trading-panel {
+    padding: var(--space-md);
+  }
+
+  .stock-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-number {
+    font-size: 22px;
+  }
+
+  .tags-row {
+    gap: var(--space-xs);
+  }
+
+  .tag-pill {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  /* Auth — reduce hero */
+  .auth-hero h1 {
+    font-size: 20px;
+  }
+
+  .auth-hero p {
+    font-size: 12px;
+  }
+
+  /* Home */
+  .feature-card {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .home-section {
+    padding: var(--space-xl) 0;
   }
 }

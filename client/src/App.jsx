@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import TickerTape from './components/TickerTape';
 import Home from './pages/Home';
@@ -21,6 +22,7 @@ function App() {
 
   return (
     <ToastProvider>
+      <ScrollToTop />
       <div className="app-layout">
         <Navbar />
         <TickerTape />
