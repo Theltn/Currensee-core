@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { apiFetch } from '../hooks/useApi';
 
 const AskAI = () => {
   const [question, setQuestion] = useState('');
@@ -6,21 +8,15 @@ const AskAI = () => {
     { who: 'ai', text: "Hi! I can help explain options basics, trading strategies, risk management, and more. What would you like to learn about?" }
   ]);
   const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll chat container (not the whole page) on new messages
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = chatContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [chats, loading]);
 
-  const formatText = (text) => {
-    return text.split('\n').map((line, i) => (
-      <span key={i}>
-        {line}
-        <br />
-      </span>
-    ));
-  };
+
 
   const handleAsk = async (e) => {
     e.preventDefault();
@@ -32,12 +28,9 @@ const AskAI = () => {
     setLoading(true);
 
     try {
-      const url = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-      const res = await fetch(`${url}/api/ai/ask`, {
+      const res = await apiFetch('/api/ai/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ question: q, maxTokens: 300 })
+        body: JSON.stringify({ question: q, maxTokens: 300 }),
       });
 
       if (!res.ok) {
@@ -74,13 +67,16 @@ const AskAI = () => {
         <h1 className="ask-title">Ask <span>Currensee</span></h1>
       </div>
 
-      <div className="chat-container">
+      <div className="chat-container" ref={chatContainerRef}>
         {chats.map((c, i) => (
           <div
             key={i}
             className={`chat-bubble ${c.who === 'me' ? 'chat-bubble--user slide-in-right' : 'chat-bubble--ai slide-in-left'}`}
           >
-            {formatText(c.text)}
+            {c.who === 'ai'
+              ? <ReactMarkdown className="ai-markdown">{c.text}</ReactMarkdown>
+              : c.text
+            }
           </div>
         ))}
         {loading && (
@@ -92,7 +88,7 @@ const AskAI = () => {
             </div>
           </div>
         )}
-        <div ref={chatEndRef} />
+
       </div>
 
       {/* Suggestion Chips */}

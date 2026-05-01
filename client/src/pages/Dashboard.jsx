@@ -19,6 +19,7 @@ const Dashboard = () => {
 
   const [orderType, setOrderType] = useState('market');
   const [quantity, setQuantity] = useState(1);
+  const [tradeError, setTradeError] = useState('');
 
   // ── Load user cash balance on mount (via backend) ──
   useEffect(() => {
@@ -36,7 +37,14 @@ const Dashboard = () => {
   // ── Search for a stock ──
   const handleSearch = useCallback(async () => {
     const ticker = search.trim().toUpperCase();
-    if (!ticker) return;
+    if (!ticker) {
+      setError('Please enter a ticker symbol.');
+      return;
+    }
+    if (!/^[A-Z]{1,5}$/.test(ticker)) {
+      setError('Ticker must be 1-5 letters (e.g. AAPL, TSLA).');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -145,6 +153,19 @@ const Dashboard = () => {
   // ── Execute Trade (via backend) ──
   const handleTrade = async (type) => {
     if (!stock) return;
+
+    // Client-side validation
+    const qty = parseInt(quantity, 10);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setTradeError('Quantity must be a positive whole number.');
+      return;
+    }
+    if (type === 'BUY' && cashBalance !== null && stock.price * qty > cashBalance) {
+      setTradeError(`Insufficient funds. Need $${(stock.price * qty).toFixed(2)} but only $${cashBalance.toFixed(2)} available.`);
+      return;
+    }
+
+    setTradeError('');
     setTradeLoading(true);
 
     try {
@@ -275,7 +296,7 @@ const Dashboard = () => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>Quantity</label>
-                <input type="number" className="input-modern" value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))} min="1" />
+                <input type="number" className="input-modern" value={quantity} onChange={(e) => { setQuantity(Math.max(1, Math.floor(Number(e.target.value)))); setTradeError(''); }} min="1" step="1" />
               </div>
 
               <div className="order-summary">
@@ -295,6 +316,7 @@ const Dashboard = () => {
               </div>
 
               <div className="trade-actions">
+                {tradeError && <div className="alert-error" style={{ marginBottom: '8px', fontSize: '13px' }}>{tradeError}</div>}
                 <button className="btn-success" onClick={() => handleTrade('BUY')} disabled={tradeLoading}>
                   {tradeLoading ? '...' : 'Buy'}
                 </button>
