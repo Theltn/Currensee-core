@@ -1018,4 +1018,59 @@
     gap: var(--space-sm);
     text-align: center;
   }
+
+  /* Touch targets — 44px minimum */
+  .btn-primary,
+  .btn-success,
+  .btn-danger,
+  .btn-ghost,
+  .btn-outline-accent {
+    min-height: 44px;
+    padding: 11px 20px;
+    font-size: 14px;
+  }
+
+  .input-modern,
+  .select-modern {
+    min-height: 44px;
+    padding: 11px 14px;
+    font-size: 14px;
+  }
+
+  /* Table readability on mobile */
+  .data-table thead th {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .data-table tbody td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  /* KPI sizing */
+  .kpi-value {
+    font-size: 22px;
+  }
+
+  /* Toasts — full width on mobile */
+  .toast-container {
+    right: 10px;
+    left: 10px;
+  }
+
+  .toast {
+    min-width: unset;
+    max-width: unset;
+  }
+
+  /* Section heading */
+  .section-heading {
+    font-size: 1.05rem;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: var(--space-lg) var(--space-md);
+  }
 }
