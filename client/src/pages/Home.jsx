@@ -211,6 +211,11 @@ const Home = () => {
             <h3>AI Market Tutor</h3>
             <p>Ask questions about trading strategies, risk management, and market mechanics — powered by AI.</p>
           </Link>
+          <Link to="/watchlist" className="feature-card fade-in-up stagger-4">
+            <div className="feature-card-icon">👀</div>
+            <h3>Watchlist</h3>
+            <p>Track stocks you're eyeing with live sparkline charts and custom price alerts that notify you in real time.</p>
+          </Link>
         </div>
       </div>
 

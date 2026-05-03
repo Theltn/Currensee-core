@@ -325,12 +325,12 @@
 
 /* ── Financial Colors ── */
 .price-up {
-  color: var(--color-gain);
+  color: var(--color-gain) !important;
   font-weight: 600;
 }
 
 .price-down {
-  color: var(--color-loss);
+  color: var(--color-loss) !important;
   font-weight: 600;
 }
 
@@ -885,62 +885,6 @@
   }
 }
 
-/* ── Ticker Tape ── */
-.ticker-tape {
-  background: var(--bg-deepest);
-  border-bottom: 1px solid var(--border-subtle);
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 8px 0;
-}
-
-.ticker-tape-track {
-  display: inline-flex;
-  animation: tickerScroll 40s linear infinite;
-  will-change: transform;
-  backface-visibility: hidden;
-}
-
-.ticker-tape-track:hover {
-  animation-play-state: paused;
-}
-
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 20px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.ticker-item-symbol {
-  color: var(--text-bright);
-  font-weight: 600;
-}
-
-.ticker-item-price {
-  color: var(--text-primary);
-}
-
-.ticker-item-change {
-  font-size: 11px;
-  font-weight: 600;
-}
-
-@keyframes tickerScroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  100% {
-    transform: translate3d(calc(-100% / var(--copies, 4)), 0, 0);
-  }
-}
 
 /* ── Suggestion Chips ── */
 .suggestion-chips {

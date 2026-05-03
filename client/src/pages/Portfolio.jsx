@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'chart.js/auto';
 import { apiFetch } from '../hooks/useApi';
+import PortfolioHeatmap from '../components/PortfolioHeatmap';
 
 const Portfolio = () => {
   const chartRef = useRef(null);
@@ -12,6 +13,7 @@ const Portfolio = () => {
   const [livePrices, setLivePrices] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'heatmap'
 
   // ── 1. Fetch portfolio from backend ──
   useEffect(() => {
@@ -181,71 +183,95 @@ const Portfolio = () => {
         </div>
       </div>
 
-      {/* Holdings Table */}
+      {/* Holdings Section */}
       <div className="holdings-card fade-in-up stagger-4">
-        <div className="holdings-card-header">Holdings</div>
-        <div className="holdings-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Ticker</th>
-                <th>Name</th>
-                <th className="text-right">Qty</th>
-                <th className="text-right">Avg Cost</th>
-                <th className="text-right">Price</th>
-                <th className="text-right">Market Value</th>
-                <th className="text-right">Total P/L</th>
-                <th className="text-right">Alloc %</th>
-              </tr>
-            </thead>
-            <tbody>
-              {withAlloc.length === 0 ? (
-                <tr>
-                  <td colSpan="8">
-                    <div className="empty-state" style={{ padding: '40px 20px' }}>
-                      <div className="empty-state-icon">💼</div>
-                      <h3>No positions yet</h3>
-                      <p>Start by buying stocks from the Trading Dashboard</p>
-                      <Link to="/dashboard" className="btn-primary" style={{ marginTop: '4px' }}>
-                        Go to Dashboard
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                withAlloc.map((h, i) => (
-                  <tr key={i}>
-                    <td><strong>{h.ticker}</strong></td>
-                    <td>{h.name}</td>
-                    <td className="text-right">{h.shares}</td>
-                    <td className="text-right">{fmt(h.avgCost)}</td>
-                    <td className="text-right">{fmt(h.currentPrice)}</td>
-                    <td className="text-right">{fmt(h.mv)}</td>
-                    <td className={`text-right ${h.totPL >= 0 ? 'price-up' : 'price-down'}`}>
-                      {h.totPL >= 0 ? '+' : ''}{fmt(h.totPL)}
-                    </td>
-                    <td className="text-right">{h.alloc.toFixed(1)}%</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-            {withAlloc.length > 0 && (
-              <tfoot>
-                <tr>
-                  <th colSpan="5" className="text-right">Totals</th>
-                  <th className="text-right">{fmt(totalMV)}</th>
-                  <th className={`text-right ${totalPL >= 0 ? 'price-up' : 'price-down'}`}>
-                    {totalPL >= 0 ? '+' : ''}{fmt(totalPL)}
-                  </th>
-                  <th className="text-right">100%</th>
-                </tr>
-              </tfoot>
-            )}
-          </table>
+        <div className="holdings-header-row">
+          <div className="holdings-card-header">Holdings</div>
+          {withAlloc.length > 0 && (
+            <div className="view-toggle">
+              <button
+                className={`view-toggle-btn ${viewMode === 'table' ? 'view-toggle-btn--active' : ''}`}
+                onClick={() => setViewMode('table')}
+              >
+                Table
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'heatmap' ? 'view-toggle-btn--active' : ''}`}
+                onClick={() => setViewMode('heatmap')}
+              >
+                Heatmap
+              </button>
+            </div>
+          )}
         </div>
+
+        {viewMode === 'table' ? (
+          <div className="holdings-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Name</th>
+                  <th className="text-right">Qty</th>
+                  <th className="text-right">Avg Cost</th>
+                  <th className="text-right">Price</th>
+                  <th className="text-right">Market Value</th>
+                  <th className="text-right">Total P/L</th>
+                  <th className="text-right">Alloc %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {withAlloc.length === 0 ? (
+                  <tr>
+                    <td colSpan="8">
+                      <div className="empty-state" style={{ padding: '40px 20px' }}>
+                        <div className="empty-state-icon">💼</div>
+                        <h3>No positions yet</h3>
+                        <p>Start by buying stocks from the Trading Dashboard</p>
+                        <Link to="/dashboard" className="btn-primary" style={{ marginTop: '4px' }}>
+                          Go to Dashboard
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  withAlloc.map((h, i) => (
+                    <tr key={i}>
+                      <td><strong>{h.ticker}</strong></td>
+                      <td>{h.name}</td>
+                      <td className="text-right">{h.shares}</td>
+                      <td className="text-right">{fmt(h.avgCost)}</td>
+                      <td className="text-right">{fmt(h.currentPrice)}</td>
+                      <td className="text-right">{fmt(h.mv)}</td>
+                      <td className={`text-right ${h.totPL >= 0 ? 'price-up' : 'price-down'}`}>
+                        {h.totPL >= 0 ? '+' : ''}{fmt(h.totPL)}
+                      </td>
+                      <td className="text-right">{h.alloc.toFixed(1)}%</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+              {withAlloc.length > 0 && (
+                <tfoot>
+                  <tr>
+                    <th colSpan="5" className="text-right">Totals</th>
+                    <th className="text-right">{fmt(totalMV)}</th>
+                    <th className={`text-right ${totalPL >= 0 ? 'price-up' : 'price-down'}`}>
+                      {totalPL >= 0 ? '+' : ''}{fmt(totalPL)}
+                    </th>
+                    <th className="text-right">100%</th>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        ) : (
+          <PortfolioHeatmap holdings={withAlloc} />
+        )}
       </div>
     </div>
   );
 };
 
 export default Portfolio;
+

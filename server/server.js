@@ -67,9 +67,11 @@ app.get('/', (req, res) => {
 const stocksRouter = require('./routes/stocks');
 const aiRouter = require('./routes/aiRoute.js');
 const portfolioRouter = require('./routes/portfolio');
+const watchlistRouter = require('./routes/watchlist');
 app.use('/api/ai', aiRouter);
 app.use('/stocks', stocksRouter);
 app.use('/portfolio', portfolioRouter);
+app.use('/watchlist', watchlistRouter);
 
 // ---------- MongoDB (optional but recommended) ----------
 async function start() {

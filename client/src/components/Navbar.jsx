@@ -35,6 +35,7 @@ const Navbar = () => {
   const navItems = [
     { to: '/', label: 'Home' },
     { to: '/dashboard', label: 'Dashboard' },
+    { to: '/watchlist', label: 'Watchlist' },
     { to: '/options-center', label: 'Options Hub' },
     { to: '/options-playground', label: 'Playground' },
     { to: '/portfolio', label: 'Portfolio' },

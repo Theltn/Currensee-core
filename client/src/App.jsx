@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
-import TickerTape from './components/TickerTape';
+
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import AuthGuard from './components/AuthGuard';
@@ -14,6 +14,7 @@ import Portfolio from './pages/Portfolio';
 import OptionsCenter from './pages/OptionsCenter';
 import OptionsPlayground from './pages/OptionsPlayground';
 import AskAI from './pages/AskAI';
+import Watchlist from './pages/Watchlist';
 
 import './index.css';
 
@@ -25,7 +26,7 @@ function App() {
       <ScrollToTop />
       <div className="app-layout">
         <Navbar />
-        <TickerTape />
+
         
         <main className="app-main">
           <div className="page-enter" key={location.pathname}>
@@ -39,6 +40,7 @@ function App() {
               <Route path="/options-center" element={<AuthGuard><OptionsCenter /></AuthGuard>} />
               <Route path="/options-playground" element={<AuthGuard><OptionsPlayground /></AuthGuard>} />
               <Route path="/ask" element={<AuthGuard><AskAI /></AuthGuard>} />
+              <Route path="/watchlist" element={<AuthGuard><Watchlist /></AuthGuard>} />
             </Routes>
           </div>
         </main>

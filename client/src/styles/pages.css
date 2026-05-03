@@ -138,6 +138,157 @@
   overflow-x: auto;
 }
 
+/* ── Holdings Header Row (with view toggle) ── */
+.holdings-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.holdings-header-row .holdings-card-header {
+  padding: 0;
+  border-bottom: none;
+}
+
+/* ── View Toggle (Segmented Control) ── */
+.view-toggle {
+  display: flex;
+  background: var(--bg-deepest);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-toggle-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--ts-fast);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.view-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.view-toggle-btn--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.view-toggle-btn--active:hover {
+  color: #fff;
+}
+
+/* ── Portfolio Heatmap ── */
+.heatmap-container {
+  position: relative;
+  width: 100%;
+  padding: var(--space-md);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.heatmap-container.heatmap-mounted {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.heatmap-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.heatmap-cell {
+  cursor: pointer;
+}
+
+.heatmap-rect {
+  transition: filter 0.15s ease, stroke 0.15s ease;
+  stroke: var(--bg-secondary);
+  stroke-width: 2;
+}
+
+.heatmap-cell:hover .heatmap-rect {
+  filter: brightness(1.25);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 2;
+}
+
+.heatmap-label {
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.heatmap-tooltip {
+  position: absolute;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  min-width: 190px;
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: tooltipIn 0.15s ease;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.heatmap-tooltip-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.heatmap-tooltip-header strong {
+  font-size: 15px;
+  color: var(--text-bright);
+}
+
+.heatmap-tooltip-header span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.heatmap-tooltip-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.heatmap-tooltip-rows > div > span:first-child {
+  color: var(--text-muted);
+}
+
+.heatmap-tooltip-rows > div > span:last-child {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+
 /* ── Options Center ── */
 .hero-banner {
   background: var(--bg-secondary);
@@ -625,7 +776,7 @@
 /* ── Home Page Feature Cards ── */
 .feature-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-lg);
 }
 
@@ -697,6 +848,189 @@
   border-top: 1px solid var(--border-subtle);
 }
 
+/* ── Watchlist Page ── */
+.watchlist-add-bar {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.watchlist-add-fields {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+
+.watchlist-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: border-color var(--ts-fast), box-shadow var(--ts-fast);
+}
+
+.watchlist-card:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+.watchlist-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.watchlist-card-ticker {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: 0.02em;
+}
+
+.watchlist-card-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watchlist-card-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.watchlist-btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--ts-fast);
+}
+
+.watchlist-btn-icon:hover {
+  background: var(--bg-hover);
+}
+
+.watchlist-btn-remove {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.watchlist-btn-remove:hover {
+  color: var(--color-loss);
+  background: var(--color-loss-bg);
+}
+
+.watchlist-card-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.watchlist-card-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.watchlist-card-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.watchlist-card-change {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.watchlist-alert-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.watchlist-alert-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-variant-numeric: tabular-nums;
+}
+
+.watchlist-alert-badge--above {
+  background: var(--color-gain-bg);
+  color: var(--color-gain);
+}
+
+.watchlist-alert-badge--below {
+  background: var(--color-loss-bg);
+  color: var(--color-loss);
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  width: 90%;
+  max-width: 380px;
+  box-shadow: var(--shadow-float);
+  animation: scaleIn 0.2s ease;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.modal-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
 /* ── Responsive ── */
 
 /* ── Tablet (≤ 1024px) ── */
@@ -723,6 +1057,10 @@
 
   .calculator-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .watchlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
@@ -815,6 +1153,14 @@
 
   .stock-overview {
     padding: var(--space-md);
+  }
+
+  .watchlist-add-fields {
+    flex-direction: column;
+  }
+
+  .watchlist-grid {
+    grid-template-columns: 1fr;
   }
 }
 
