@@ -4,7 +4,7 @@ const axios = require("axios");
 // In-memory cache to avoid 429 rate limits
 // ═══════════════════════════════════════
 const cache = new Map();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes — Massive free tier is ~5 req/min
+const CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours — Massive free tier is ~5 req/min, OHLCV is daily-resolution
 
 function getCached(key) {
   const entry = cache.get(key);
@@ -162,5 +162,5 @@ const getStock = async (req, res) => {
   }
 };
 
-module.exports = { getStockPrices, getStock, getStockLogo };
+module.exports = { getStockPrices, getStock, getStockLogo, fetchStockQuote, fetchStockMeta, dedupedFetch };
 

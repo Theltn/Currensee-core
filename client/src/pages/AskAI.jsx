@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { apiFetch } from '../hooks/useApi';
+import { fetchStockCached } from '../utils/stockCache';
 
 const AskAI = () => {
   const [question, setQuestion] = useState('');
   const [chats, setChats] = useState([
-    { who: 'ai', text: "Hi! I can help explain options basics, trading strategies, risk management, and more. What would you like to learn about?" }
+    { who: 'ai', text: "Hi! I can help explain options basics, trading strategies, risk management, and more. I can also see your current portfolio — feel free to ask about it." }
   ]);
   const [loading, setLoading] = useState(false);
+  const [portfolioCtx, setPortfolioCtx] = useState(null);
   const chatContainerRef = useRef(null);
 
   // Auto-scroll chat container (not the whole page) on new messages
@@ -16,7 +18,62 @@ const AskAI = () => {
     if (el) el.scrollTop = el.scrollHeight;
   }, [chats, loading]);
 
+  // Pull portfolio + open option positions once so the AI can reference them
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [pRes, oRes] = await Promise.all([
+          apiFetch('/portfolio').catch(() => null),
+          apiFetch('/options/positions').catch(() => null),
+        ]);
+        if (cancelled) return;
 
+        const ctx = { cash: 0, holdings: [], options: [] };
+        if (pRes?.ok) {
+          const p = await pRes.json();
+          ctx.cash = p.cash ?? 0;
+
+          // Fetch live prices for each holding so the AI can reason about real P/L.
+          // fetchStockCached uses localStorage (30-min TTL), so this is essentially free
+          // when the user has already loaded Portfolio/Trade in the same session.
+          const enriched = await Promise.all((p.holdings || []).map(async (h) => {
+            let currentPrice = h.avgCost;
+            try {
+              const data = await fetchStockCached(h.ticker);
+              const td = data?.tradingData;
+              if (Array.isArray(td) && td.length > 0) currentPrice = td[td.length - 1].c;
+            } catch { /* fall back to avgCost */ }
+            const totPL = (currentPrice - h.avgCost) * h.shares;
+            return {
+              ticker: h.ticker,
+              shares: h.shares,
+              avgCost: h.avgCost,
+              currentPrice,
+              totPL,
+            };
+          }));
+          if (cancelled) return;
+          ctx.holdings = enriched;
+        }
+        if (oRes?.ok) {
+          const o = await oRes.json();
+          ctx.options = (o.positions || []).map(pos => ({
+            ticker: pos.ticker,
+            optionType: pos.optionType,
+            strike: pos.strike,
+            contracts: pos.contracts,
+            premium: pos.premium,
+            daysLeft: pos.daysLeft,
+          }));
+        }
+        ctx.equity = ctx.cash + ctx.holdings.reduce((s, h) => s + h.currentPrice * h.shares, 0);
+        ctx.totalPL = ctx.holdings.reduce((s, h) => s + h.totPL, 0);
+        setPortfolioCtx(ctx);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleAsk = async (e) => {
     e.preventDefault();
@@ -30,7 +87,11 @@ const AskAI = () => {
     try {
       const res = await apiFetch('/api/ai/ask', {
         method: 'POST',
-        body: JSON.stringify({ question: q, maxTokens: 300 }),
+        body: JSON.stringify({
+          question: q,
+          maxTokens: 500,
+          portfolio: portfolioCtx || undefined,
+        }),
       });
 
       if (!res.ok) {
@@ -54,12 +115,20 @@ const AskAI = () => {
     setQuestion(text);
   };
 
-  const suggestions = [
-    "What are options?",
-    "Explain Delta",
-    "Best strategies for beginners",
-    "Covered call vs naked call",
-  ];
+  const hasPortfolio = portfolioCtx && (portfolioCtx.holdings.length > 0 || portfolioCtx.options.length > 0);
+  const suggestions = hasPortfolio
+    ? [
+        "How is my portfolio diversified?",
+        "What's the biggest risk in my positions?",
+        "Explain my open option positions",
+        "What strategies fit my current holdings?",
+      ]
+    : [
+        "What are options?",
+        "Explain Delta",
+        "Best strategies for beginners",
+        "Covered call vs naked call",
+      ];
 
   return (
     <div className="page-container page-container--chat">

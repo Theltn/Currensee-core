@@ -34,11 +34,10 @@ const Navbar = () => {
 
   const navItems = [
     { to: '/', label: 'Home' },
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/watchlist', label: 'Watchlist' },
+    { to: '/trade', label: 'Trade' },
+    { to: '/portfolio', label: 'Portfolio' },
     { to: '/options-center', label: 'Options Hub' },
     { to: '/options-playground', label: 'Playground' },
-    { to: '/portfolio', label: 'Portfolio' },
     { to: '/ask', label: 'Ask AI' },
   ];
 

@@ -1,138 +1,123 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchStockCached } from '../utils/stockCache';
 import Chart from 'chart.js/auto';
 
-const StockChartCard = ({ ticker }) => {
+// ─── Live market mini-card ────────────────────────────────────────────────────
+const MarketCard = ({ ticker }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStock = async () => {
+    (async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/stocks/${ticker}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ticker }),
-        });
-        const json = await response.json();
-        if (json.tradingData && json.tradingData.length > 0) {
-          setData(json);
-        } else {
-          setData({ error: true });
-        }
-      } catch (err) {
+        const json = await fetchStockCached(ticker);
+        setData(json.tradingData?.length > 0 ? json : { error: true });
+      } catch {
         setData({ error: true });
       } finally {
         setLoading(false);
       }
-    };
-    fetchStock();
+    })();
   }, [ticker]);
 
   useEffect(() => {
-    if (data && !data.error && chartRef.current) {
-      if (chartInstance.current) chartInstance.current.destroy();
+    if (!data || data.error || !chartRef.current) return;
+    if (chartInstance.current) chartInstance.current.destroy();
 
-      const labels = data.tradingData.map(d => new Date(d.t).toLocaleDateString());
-      const prices = data.tradingData.map(d => d.c);
-      
-      const isPositive = prices[prices.length - 1] >= prices[0];
-      const color = isPositive ? '#26a69a' : '#ef5350';
+    const prices = data.tradingData.map(d => d.c);
+    const labels = data.tradingData.map(d => new Date(d.t).toLocaleDateString());
+    const isUp = prices[prices.length - 1] >= prices[0];
+    const color = isUp ? '#26a69a' : '#ef5350';
 
-      chartInstance.current = new Chart(chartRef.current, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: `${ticker}`,
-            data: prices,
-            borderColor: color,
-            backgroundColor: 'transparent',
-            borderWidth: 1.5,
-            fill: false,
-            tension: 0.1,
-            pointRadius: 0,
-            pointHoverRadius: 3,
-            pointHoverBackgroundColor: color,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { display: false },
-            y: {
-              grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-              ticks: { color: '#5d6673', font: { size: 10 }, maxTicksLimit: 4 },
-              border: { display: false },
-            }
-          },
-          interaction: { intersect: false, mode: 'index' },
-        }
-      });
-    }
+    chartInstance.current = new Chart(chartRef.current, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: prices,
+          borderColor: color,
+          backgroundColor: isUp ? 'rgba(38,166,154,0.08)' : 'rgba(239,83,80,0.08)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.1,
+          pointRadius: 0,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        animation: { duration: 800 },
+      },
+    });
 
-    return () => {
-      if (chartInstance.current) chartInstance.current.destroy();
-    };
-  }, [data, ticker]);
+    return () => { if (chartInstance.current) chartInstance.current.destroy(); };
+  }, [data]);
 
-  const latestPrice = data && !data.error && data.tradingData 
-    ? data.tradingData[data.tradingData.length - 1].c : null;
-  const isUp = data && !data.error && data.tradingData 
-    ? data.tradingData[data.tradingData.length - 1].c >= data.tradingData[0].c : true;
+  const prices = data?.tradingData;
+  const latest = prices?.[prices.length - 1]?.c;
+  const first = prices?.[0]?.c;
+  const changePct = latest && first ? ((latest - first) / first) * 100 : null;
+  const isUp = changePct === null ? true : changePct >= 0;
 
   return (
-    <div className="card-flat" style={{ height: '240px', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-bright)' }}>{ticker}</span>
-        {loading ? (
-          <div className="skeleton skeleton-text" style={{ width: '60px', height: '14px', marginBottom: 0 }} />
-        ) : latestPrice ? (
-          <span className={isUp ? 'price-up' : 'price-down'} style={{ fontSize: '14px' }}>
-            ${latestPrice.toFixed(2)}
-          </span>
-        ) : null}
+    <div className="market-card fade-in-up">
+      <div className="market-card-top">
+        <div>
+          <div className="market-card-ticker">{ticker}</div>
+          <div className="market-card-name">
+            {loading ? '—' : (data?.name || ticker)}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          {loading ? (
+            <div className="skeleton" style={{ width: 64, height: 32, borderRadius: 6 }} />
+          ) : latest ? (
+            <>
+              <div className="market-card-price">${latest.toFixed(2)}</div>
+              {changePct !== null && (
+                <div className={`market-card-change ${isUp ? 'price-up' : 'price-down'}`}>
+                  {isUp ? '▲' : '▼'} {Math.abs(changePct).toFixed(2)}%
+                </div>
+              )}
+            </>
+          ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Unavailable</span>}
+        </div>
       </div>
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div className="market-card-chart">
         {loading ? (
-          <div className="skeleton" style={{ height: '100%', borderRadius: 'var(--radius-md)' }} />
-        ) : data && data.error ? (
-          <div className="chart-error">Unavailable</div>
+          <div className="skeleton" style={{ height: '100%', borderRadius: 4 }} />
+        ) : data?.error ? (
+          <div style={{ color: 'var(--text-muted)', fontSize: 12, textAlign: 'center', paddingTop: 20 }}>No data</div>
         ) : (
-          <canvas ref={chartRef}></canvas>
+          <canvas ref={chartRef} />
         )}
       </div>
     </div>
   );
 };
 
-// Animated counter hook
+// ─── Animated counter ─────────────────────────────────────────────────────────
 const useCountUp = (target, duration = 1500) => {
   const [value, setValue] = useState(0);
   const startTime = useRef(null);
   const rafRef = useRef(null);
 
   useEffect(() => {
-    if (target === 0) return;
+    if (target === 0) { setValue(0); return; }
     startTime.current = performance.now();
-    
     const animate = (now) => {
       const elapsed = now - startTime.current;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.floor(eased * target));
-      
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(animate);
-      }
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate);
     };
-    
     rafRef.current = requestAnimationFrame(animate);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [target, duration]);
@@ -140,96 +125,110 @@ const useCountUp = (target, duration = 1500) => {
   return value;
 };
 
-const StatItem = ({ target, suffix = '', label }) => {
+const StatItem = ({ target, prefix = '', suffix = '', label }) => {
   const count = useCountUp(target);
   return (
     <div className="stat-item fade-in-up">
-      <div className="stat-number">{count.toLocaleString()}{suffix}</div>
+      <div className="stat-number">{prefix}{count.toLocaleString()}{suffix}</div>
       <div className="stat-desc">{label}</div>
     </div>
   );
 };
 
+// ─── Home ─────────────────────────────────────────────────────────────────────
 const Home = () => {
   const { currentUser } = useAuth();
-  const featuredTickers = ['AAPL', 'GOOGL', 'TSLA', 'NVDA'];
 
   return (
     <div className="page-container">
-      
-      {/* Hero */}
-      <section className="hero-section fade-in">
+
+      {/* ── Hero ── */}
+      <section className="hero-section hero-gradient fade-in">
+        <div className="hero-badge">
+          <span className="pulse-dot" />
+          Risk-Free Paper Trading
+        </div>
+
         <h1 className="hero-title">
-          Trade Smarter with <span className="accent-text">Currensee</span>
+          Learn.{' '}
+          <span className="accent-text">Trade.</span>
+          {' '}Analyze.
         </h1>
+
         <p className="hero-subtitle">
-          Paper trade stocks, analyze options chains, and get AI-powered market insights — all in one platform.
+          Paper trade real stocks with live market data, master options chains,
+          and get AI-powered market insights — without risking a cent.
         </p>
-        <div style={{ marginTop: '24px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+
+        <div className="hero-ctas">
           {currentUser ? (
-            <Link to="/dashboard" className="btn-primary" style={{ padding: '11px 28px', fontSize: '14px' }}>
-              Open Dashboard
-            </Link>
+            <>
+              <Link to="/trade" className="btn-primary" style={{ padding: '12px 32px', fontSize: '14px' }}>
+                Continue Trading →
+              </Link>
+              <Link to="/portfolio" className="btn-ghost" style={{ padding: '12px 28px', fontSize: '14px' }}>
+                View Portfolio
+              </Link>
+            </>
           ) : (
             <>
-              <Link to="/auth" className="btn-primary" style={{ padding: '11px 28px', fontSize: '14px' }}>
-                Get Started
+              <Link to="/auth" className="btn-primary" style={{ padding: '12px 32px', fontSize: '14px' }}>
+                Get Started Free →
               </Link>
-              <Link to="/options-center" className="btn-outline-accent" style={{ padding: '11px 28px', fontSize: '14px' }}>
-                Learn Options
+              <Link to="/options-center" className="btn-ghost" style={{ padding: '12px 28px', fontSize: '14px' }}>
+                Explore Options
               </Link>
             </>
           )}
         </div>
       </section>
 
-      {/* Stats */}
+      {/* ── Stats ── */}
       <div className="home-section">
         <div className="stats-row">
-          <StatItem target={100000} suffix="" label="Starting Capital" />
-          <StatItem target={8} suffix="+" label="Live Markets" />
-          <StatItem target={5} suffix="" label="Options Greeks" />
-          <StatItem target={24} suffix="/7" label="AI Assistant" />
+          <StatItem prefix="$" target={100000} label="Starting Capital" />
+          <StatItem target={6} suffix=" mo" label="Price History" />
+          <StatItem target={5} label="Options Greeks" />
+          <StatItem target={0} suffix=" risk" label="Paper Trading" />
         </div>
       </div>
 
-      {/* Feature Cards */}
+      {/* ── Feature Cards ── */}
       <div className="home-section">
+        <h2 className="section-heading">Everything in one platform</h2>
         <div className="feature-cards">
-          <Link to="/dashboard" className="feature-card fade-in-up stagger-1">
-            <div className="feature-card-icon">📈</div>
-            <h3>Trading Dashboard</h3>
-            <p>Search any stock, view live charts, and execute paper trades with real-time market data.</p>
+          <Link to="/trade" className="feature-card feature-card--blue fade-in-up stagger-1">
+            <h3>Trade</h3>
+            <p>Search any stock, compare tickers on the same chart, execute paper trades, and monitor your watchlist — all in one unified view.</p>
           </Link>
-          <Link to="/options-center" className="feature-card fade-in-up stagger-2">
-            <div className="feature-card-icon">⚡</div>
-            <h3>Options Center</h3>
-            <p>Learn options fundamentals, calculate breakevens, and explore the Greeks in an interactive playground.</p>
+          <Link to="/portfolio" className="feature-card feature-card--green fade-in-up stagger-2">
+            <h3>Portfolio</h3>
+            <p>Track holdings, P&L, and allocation with live prices. Visualize with allocation charts and heatmaps, and quick-trade positions inline.</p>
           </Link>
-          <Link to="/ask" className="feature-card fade-in-up stagger-3">
-            <div className="feature-card-icon">🤖</div>
-            <h3>AI Market Tutor</h3>
-            <p>Ask questions about trading strategies, risk management, and market mechanics — powered by AI.</p>
+          <Link to="/options-center" className="feature-card feature-card--purple fade-in-up stagger-3">
+            <h3>Options Hub</h3>
+            <p>Learn calls, puts, and the Greeks with interactive calculators. Simulate real options chains in a risk-free playground.</p>
           </Link>
-          <Link to="/watchlist" className="feature-card fade-in-up stagger-4">
-            <div className="feature-card-icon">👀</div>
-            <h3>Watchlist</h3>
-            <p>Track stocks you're eyeing with live sparkline charts and custom price alerts that notify you in real time.</p>
+          <Link to="/ask" className="feature-card feature-card--orange fade-in-up stagger-4">
+            <h3>Ask AI</h3>
+            <p>Ask anything about trading strategy, risk management, or market mechanics — powered by GPT-4o-mini with financial context.</p>
           </Link>
         </div>
       </div>
 
-      {/* Live Charts */}
+      {/* ── Live Market Trends ── */}
       <div className="home-section">
         <h2 className="section-heading">
           <span className="pulse-dot" />
           Live Market Trends
         </h2>
         <div className="grid-auto">
-          {featuredTickers.map(t => <StockChartCard key={t} ticker={t} />)}
+          {['AAPL', 'GOOGL', 'TSLA', 'NVDA'].map(t => (
+            <MarketCard key={t} ticker={t} />
+          ))}
         </div>
       </div>
-      
+
     </div>
   );
 };

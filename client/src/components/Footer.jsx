@@ -12,7 +12,7 @@ const Footer = () => {
 
         <div className="footer-col">
           <h4>Platform</h4>
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/trade">Trade</Link>
           <Link to="/portfolio">Portfolio</Link>
           <Link to="/options-center">Options Hub</Link>
           <Link to="/ask">Ask AI</Link>

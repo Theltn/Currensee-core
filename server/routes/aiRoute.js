@@ -71,9 +71,36 @@ router.post('/ask', requireAuth, rateLimit, aiControls, async (req, res) => {
     );
     console.log('[AI] max_output_tokens =', MAX_OUT);
 
+    // Optional portfolio context — included so the AI can answer personalized questions
+    const portfolio = req.body?.portfolio;
+    let portfolioBlock = '';
+    if (portfolio && typeof portfolio === 'object') {
+      const lines = [];
+      if (typeof portfolio.cash === 'number') lines.push(`Cash available: $${portfolio.cash.toFixed(2)}`);
+      if (typeof portfolio.equity === 'number') lines.push(`Net account value: $${portfolio.equity.toFixed(2)}`);
+      if (typeof portfolio.totalPL === 'number') lines.push(`Total unrealized P/L: ${portfolio.totalPL >= 0 ? '+' : ''}$${portfolio.totalPL.toFixed(2)}`);
+      if (Array.isArray(portfolio.holdings) && portfolio.holdings.length > 0) {
+        lines.push('Stock holdings:');
+        portfolio.holdings.slice(0, 20).forEach(h => {
+          lines.push(`  - ${h.ticker}: ${h.shares} shares, avg cost $${Number(h.avgCost).toFixed(2)}, current $${Number(h.currentPrice).toFixed(2)}, P/L ${h.totPL >= 0 ? '+' : ''}$${Number(h.totPL).toFixed(2)}`);
+        });
+      } else {
+        lines.push('Stock holdings: none');
+      }
+      if (Array.isArray(portfolio.options) && portfolio.options.length > 0) {
+        lines.push('Open option positions:');
+        portfolio.options.slice(0, 20).forEach(o => {
+          lines.push(`  - ${o.ticker} ${String(o.optionType).toUpperCase()} $${o.strike}, ${o.contracts} contract(s), premium paid $${Number(o.premium).toFixed(2)}, ${o.daysLeft}d left`);
+        });
+      }
+      if (lines.length > 0) {
+        portfolioBlock = `\n\nThe user's current paper-trading portfolio (use this to personalize answers when relevant):\n${lines.join('\n')}`;
+      }
+    }
+
     // Short, safe system prompt
     const system = `You are "Currensee", a financial AI assistant. Be clear and educational about stocks and options.
-Avoid financial advice; provide general information and learning guidance only.`;
+Avoid financial advice; provide general information and learning guidance only.${portfolioBlock}`;
 
     // Use Responses API with instructions + input
     const r = await doFetch('https://api.openai.com/v1/responses', {
