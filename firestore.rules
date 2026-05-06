@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Currensee — Firestore security rules
+//
+// All real writes/reads happen on the server via the Firebase Admin SDK,
+// which bypasses these rules entirely. These rules only govern direct
+// client-side access. We allow each signed-in user to read/write their
+// own /users/{uid}/** subtree (a safe default for future client features),
+// and deny everything else.
+//
+// Firebase Authentication (login/signup) is a separate service and is
+// not affected by Firestore rules.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
